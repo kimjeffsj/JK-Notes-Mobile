@@ -1,6 +1,6 @@
 const User = require("../models/userSchema");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+const { generateTokens } = require("../middleware/authHandler");
 
 // Register user
 // POST /register
@@ -76,13 +76,16 @@ const loginUser = async (req, res) => {
         .json({ message: "Email or password is incorrect" });
     }
 
-    const accessToken = jwt.sign({ id: user._id }, process.env.SECRET, {
-      expiresIn: "1h",
-    });
+    const { accessToken, refreshToken } = generateTokens(user._id);
+
+    user.refreshToken = refreshToken;
+    user.refreshTokenExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await user.save();
 
     return res.status(200).json({
       message: "Login successful",
       accessToken,
+      refreshToken,
       user: {
         id: user._id,
         name: user.name,
@@ -157,18 +160,40 @@ const updateProfile = async (req, res) => {
 
 // Logout user
 // GET /logout
-const logout = (req, res) => {
-  res.clearCookie("accessToken");
-  res.redirect("/login");
+const logout = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    await User.findOneAndUpdate(
+      { refreshToken },
+      {
+        $set: {
+          refreshToken: null,
+          refreshTokenExpiresAt: null,
+        },
+      }
+    );
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Logout failed" });
+  }
+};
+
+// POST /refresh-token
+const refreshToken = async (req, res) => {
+  try {
+  } catch (error) {
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ message: "Invalid refresh token" });
+    }
+    res.status(500).json({ message: "Failed to refresh token" });
+  }
 };
 
 module.exports = {
-  login,
   loginUser,
-  getRegister,
   registerUser,
-  home,
-  getProfile,
   updateProfile,
   logout,
+  refreshToken,
 };
