@@ -4,8 +4,7 @@ import {
   AuthState,
   LoginCredentials,
   RegisterCredentials,
-  User,
-} from "@/shared/types/auth";
+} from "@/shared/types/auth/auth";
 import api from "@/utils/api";
 import { storage } from "@/utils/storage";
 

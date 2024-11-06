@@ -1,4 +1,4 @@
-import { Note, NotesState } from "@/shared/types/note";
+import { Note, NotesState } from "@/shared/types/note/note";
 import api from "@/utils/api";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
