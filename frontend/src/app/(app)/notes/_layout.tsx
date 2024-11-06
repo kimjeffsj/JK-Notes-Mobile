@@ -1,11 +1,30 @@
-import { Provider } from "react-redux";
-import { store } from "@/shared/store";
-import { Slot } from "expo-router";
+import { Stack } from "expo-router";
 
-export default function RootLayout() {
+export default function NotesLayout() {
   return (
-    <Provider store={store}>
-      <Slot />
-    </Provider>
+    <Stack>
+      <Stack.Screen
+        name="create"
+        options={{
+          title: "New Note",
+          presentation: "modal",
+          headerLeft: () => null,
+        }}
+      />
+
+      <Stack.Screen
+        name="view/[id]"
+        options={{
+          title: "Note Details",
+        }}
+      />
+
+      <Stack.Screen
+        name="edit/[id]"
+        options={{
+          title: "Edit Note",
+        }}
+      />
+    </Stack>
   );
 }
