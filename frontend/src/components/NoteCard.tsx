@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 
-import { Note } from "@/shared/types/note";
+import { Note } from "@/shared/types/note/note";
 
 interface NoteCardProps {
   note: Note;

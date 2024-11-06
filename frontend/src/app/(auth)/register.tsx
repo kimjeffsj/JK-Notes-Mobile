@@ -1,6 +1,6 @@
 import { Link, router } from "expo-router";
 import { useState } from "react";
-import { Alert, ScrollView, Text, View } from "react-native";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 import Button from "@/components/Button";
 import Input from "@/components/Input";
@@ -83,14 +83,14 @@ export default function Register() {
           isLoading={isLoading}
         />
 
-        <Link href="/(auth)/login" asChild>
-          <Button
-            title="Already have an account? Login"
-            variant="secondary"
-            onPress={() => {}}
-            className="mt-4"
-          />
-        </Link>
+        <TouchableOpacity
+          onPress={() => router.push("/(auth)/login")}
+          className="mt-4"
+        >
+          <Text className="text-center text-blue-500">
+            Already have an account? Sign in
+          </Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Alert, ScrollView, Text, View } from "react-native";
-import { Link } from "expo-router";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Link, router } from "expo-router";
 
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
 import { login } from "@/shared/store/slices/authSlice";
@@ -53,14 +53,14 @@ export default function Login() {
 
         <Button title="Login" onPress={handleLogin} isLoading={isLoading} />
 
-        <Link href="/(auth)/register" asChild>
-          <Button
-            title="Create an Account"
-            variant="secondary"
-            onPress={() => {}}
-            className="mt-4"
-          />
-        </Link>
+        <TouchableOpacity
+          onPress={() => router.push("/(auth)/register")}
+          className="mt-4"
+        >
+          <Text className="text-center text-blue-500">
+            Don't have an account? Sign up
+          </Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );

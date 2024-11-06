@@ -1,5 +1,6 @@
 import { useAppSelector } from "@/shared/hooks/useRedux";
 import { Redirect, Stack } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AppLayout() {
   const { user } = useAppSelector((state) => state.auth);
@@ -9,33 +10,35 @@ export default function AppLayout() {
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: true,
-        headerTitleStyle: {
-          fontWeight: "bold",
-        },
-        animation: "slide_from_right",
-      }}
-    >
-      <Stack.Screen
-        name="dashboard"
-        options={{ title: "My Notes", headerShown: false }}
-      />
-      <Stack.Screen
-        name="new-note"
-        options={{
-          title: "New Note",
-          presentation: "modal",
-          headerLeft: () => null,
+    <SafeAreaView>
+      <Stack
+        screenOptions={{
+          headerShown: true,
+          headerTitleStyle: {
+            fontWeight: "bold",
+          },
+          animation: "slide_from_right",
         }}
-      />
-      <Stack.Screen
-        name="Profile"
-        options={{
-          title: "Profile",
-        }}
-      />
-    </Stack>
+      >
+        <Stack.Screen
+          name="dashboard"
+          options={{ title: "My Notes", headerShown: false }}
+        />
+        <Stack.Screen
+          name="new-note"
+          options={{
+            title: "New Note",
+            presentation: "modal",
+            headerLeft: () => null,
+          }}
+        />
+        <Stack.Screen
+          name="Profile"
+          options={{
+            title: "Profile",
+          }}
+        />
+      </Stack>
+    </SafeAreaView>
   );
 }

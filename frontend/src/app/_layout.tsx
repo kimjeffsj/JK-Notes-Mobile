@@ -7,6 +7,7 @@ import { Slot, SplashScreen } from "expo-router";
 import { store } from "@/shared/store";
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
 import { checkAuth } from "@/shared/store/slices/authSlice";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,13 +25,19 @@ function RootNav() {
     }
   }, [isLoading]);
 
+  if (isLoading) {
+    return null;
+  }
+
   return <Slot />;
 }
 
 export default function RootLayout() {
   return (
     <Provider store={store}>
-      <RootNav />
+      <SafeAreaProvider>
+        <RootNav />
+      </SafeAreaProvider>
     </Provider>
   );
 }
