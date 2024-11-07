@@ -44,13 +44,13 @@ async function isAuth(req, res, next) {
 
       next();
     } catch (error) {
-      if (err.name === "TokenExpiredError") {
+      if (error.name === "TokenExpiredError") {
         return res.status(401).json({
           message: "Token Expired",
           code: "TOKEN_EXPIRED",
         });
       }
-      throw err;
+      throw error;
     }
   } catch (error) {
     return res.status(401).json({

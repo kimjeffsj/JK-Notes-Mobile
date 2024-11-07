@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 // Middleware
-const isAuth = require("../middleware/authHandler");
+const { isAuth } = require("../middleware/authHandler");
 
 // Controllers
 const {
@@ -28,9 +28,9 @@ router.post("/refresh", refreshToken);
 router.post("/logout", logout);
 
 // Notes
-router.get("notes", isAUth, getAllNotes);
+router.get("/notes", isAuth, getAllNotes);
 router.get("/notes/:_id", isAuth, getNote);
-router.get("/notes", isAuth, createNote);
+router.post("/notes", isAuth, createNote);
 router.post("/notes/:_id", isAuth, editNote);
 router.delete("/notes/:_id", isAuth, deleteNote);
 
@@ -38,6 +38,6 @@ router.delete("/notes/:_id", isAuth, deleteNote);
 router.get("/profile", isAuth, (req, res) => {
   res.json({ user: req.user });
 });
-router.post("/profiled/:_id", isAuth, updateProfile);
+router.post("/profile/:_id", isAuth, updateProfile);
 
 module.exports = router;

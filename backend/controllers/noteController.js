@@ -37,7 +37,6 @@ const getNote = async (req, res) => {
 const createNote = async (req, res) => {
   try {
     const { title, content } = req.body;
-    console.log(req.body);
 
     if (!title || !content) {
       return res.status(400).json({ message: "Please fill in all fields" });
@@ -51,7 +50,9 @@ const createNote = async (req, res) => {
       .status(201)
       .json({ message: "Note successfully created", note: newNote });
   } catch (error) {
-    res.status(500).json({ message: "Failed to create note" });
+    res
+      .status(500)
+      .json({ message: "Failed to create note", error: error.message });
   }
 };
 
