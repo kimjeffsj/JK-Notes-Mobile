@@ -12,7 +12,7 @@ const registerUser = async (req, res) => {
       return res.status(422).json({ message: "Fill in required fields" });
     }
 
-    const newEmail = email.toLowerCase();
+    const newEmail = email.toLowerCase().trim();
     const emailExists = await User.findOne({ email: newEmail });
 
     if (emailExists) {
@@ -21,10 +21,12 @@ const registerUser = async (req, res) => {
         .json({ message: "Email already exists, choose other email please" });
     }
 
-    if (password.trim().length < 6) {
-      return res
-        .status(422)
-        .json({ message: "Password should be at least 6 characters" });
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(422).json({
+        message:
+          "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+      });
     }
 
     if (password !== password2) {
@@ -34,7 +36,7 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await User.create({
-      name,
+      name: name.trim(),
       email: newEmail,
       password: hashedPassword,
     });
@@ -48,7 +50,9 @@ const registerUser = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "User registration failed" });
+    res
+      .status(500)
+      .json({ message: "User registration failed", error: error.message });
   }
 };
 
