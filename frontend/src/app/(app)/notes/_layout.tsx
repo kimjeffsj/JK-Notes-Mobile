@@ -4,7 +4,7 @@ export default function NotesLayout() {
   return (
     <Stack>
       <Stack.Screen
-        name="create"
+        name="createNote"
         options={{
           title: "New Note",
           presentation: "modal",

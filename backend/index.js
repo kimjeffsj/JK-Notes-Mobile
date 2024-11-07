@@ -30,7 +30,7 @@ app.use(
 );
 
 // Routes
-app.use("/api", routes);
+app.use("/", routes);
 
 // Error handlers
 app.use(notFound);

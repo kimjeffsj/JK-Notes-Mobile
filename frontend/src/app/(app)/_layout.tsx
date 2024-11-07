@@ -25,15 +25,14 @@ export default function AppLayout() {
           options={{ title: "My Notes", headerShown: false }}
         />
         <Stack.Screen
-          name="new-note"
+          name="notes"
           options={{
-            title: "New Note",
-            presentation: "modal",
+            title: "notes",
             headerLeft: () => null,
           }}
         />
         <Stack.Screen
-          name="Profile"
+          name="profile"
           options={{
             title: "Profile",
           }}
