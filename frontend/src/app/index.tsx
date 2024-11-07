@@ -1,11 +1,12 @@
 import { useAppSelector } from "@/shared/hooks/useRedux";
 import { Redirect } from "expo-router";
-import Dashboard from "./(app)/dashboard";
 
 export default function Index() {
   const { user } = useAppSelector((state) => state.auth);
 
-  return <Dashboard></Dashboard>;
+  if (user) {
+    return <Redirect href="/(app)/dashboard" />;
+  }
 
-  // <Redirect href={user ? "/(app)/dashboard" : "/(auth)/login"} />;
+  return <Redirect href="/(public)/welcome" />;
 }
