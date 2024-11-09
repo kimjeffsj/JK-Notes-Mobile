@@ -21,10 +21,8 @@ export default function Login() {
     }
 
     try {
-      console.log("Attempting login with frontend:", { email });
       await dispatch(login({ email, password })).unwrap();
     } catch (error: any) {
-      console.log("Login error details: ", error);
       Alert.alert("Error", error.message || "Login Failed");
     }
   };

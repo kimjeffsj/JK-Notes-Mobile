@@ -1,43 +1,41 @@
+import Header from "@/components/Header";
+import NavMenu from "@/components/Nav/NavMenu";
 import { useAppSelector } from "@/shared/hooks/useRedux";
 import { Redirect, Stack } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useState } from "react";
 
 export default function AppLayout() {
   const { user } = useAppSelector((state) => state.auth);
+  const [isNavOpen, setIsNavOpen] = useState(false);
 
   if (!user) {
     return <Redirect href="/(auth)/login" />;
   }
 
   return (
-    <SafeAreaView>
+    <>
+      <Header onMenuPress={() => setIsNavOpen(true)} />
+      <NavMenu isVisible={isNavOpen} onClose={() => setIsNavOpen(false)} />
       <Stack
         screenOptions={{
-          headerShown: true,
-          headerTitleStyle: {
-            fontWeight: "bold",
-          },
+          headerShown: false,
           animation: "slide_from_right",
         }}
       >
-        <Stack.Screen
-          name="dashboard"
-          options={{ title: "My Notes", headerShown: false }}
-        />
+        <Stack.Screen name="dashboard" options={{ headerShown: false }} />
         <Stack.Screen
           name="notes"
           options={{
-            title: "notes",
-            headerLeft: () => null,
+            headerShown: false,
           }}
         />
         <Stack.Screen
           name="profile"
           options={{
-            title: "Profile",
+            headerShown: false,
           }}
         />
       </Stack>
-    </SafeAreaView>
+    </>
   );
 }

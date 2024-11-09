@@ -14,7 +14,7 @@ const NoteCard = ({ note, onDelete }: NoteCardProps) => {
   return (
     <TouchableOpacity
       className="bg-white p-4 rounded-lg shadow-sm mb-3"
-      onPress={() => router.push(`/notes/${note._id}`)}
+      onPress={() => router.push(`/notes/view/${note._id}`)}
     >
       <Text className="text-xl font-bold mb-2">{note.title}</Text>
 

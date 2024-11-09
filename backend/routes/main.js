@@ -29,9 +29,9 @@ router.post("/logout", logout);
 
 // Notes
 router.get("/notes", isAuth, getAllNotes);
-router.get("/notes/:_id", isAuth, getNote);
-router.post("/notes", isAuth, createNote);
-router.post("/notes/:_id", isAuth, editNote);
+router.get("/notes/view/:_id", isAuth, getNote);
+router.post("/notes/create", isAuth, createNote);
+router.post("/notes/edit/:_id", isAuth, editNote);
 router.delete("/notes/:_id", isAuth, deleteNote);
 
 // Profile
