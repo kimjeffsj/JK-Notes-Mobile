@@ -27,11 +27,26 @@ export const createNote = createAsyncThunk(
   "notes/create",
   async (data: { title: string; content: string }, { rejectWithValue }) => {
     try {
-      const response = await api.post("/create", data);
+      const response = await api.post("/notes/create", data);
+
       return response.data.note;
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to create a note"
+      );
+    }
+  }
+);
+
+export const detailNote = createAsyncThunk(
+  "notes/detailNote",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/notes/${id}`);
+      return response.data.note;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch note details"
       );
     }
   }
@@ -45,7 +60,13 @@ export const editNote = createAsyncThunk(
   ) => {
     try {
       const response = await api.post(`/notes/edit/${id}`, data);
-      return response.data.editNote;
+      return {
+        _id: id,
+        creator: response.data.creator,
+        createdAt: response.data.createdAt,
+        ...data,
+        updateAt: new Date().toISOString(),
+      };
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to edit note"
@@ -112,6 +133,27 @@ const noteSlice = createSlice({
         state.error = action.payload as string;
       })
 
+      // Detail Note
+      .addCase(detailNote.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(detailNote.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.currentNote = action.payload;
+
+        const index = state.notes.findIndex(
+          (note) => note._id === action.payload._id
+        );
+        if (index !== -1) {
+          state.notes[index] = action.payload;
+        }
+      })
+      .addCase(detailNote.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
       // Edit Note
       .addCase(editNote.pending, (state) => {
         state.isLoading = true;
@@ -123,7 +165,12 @@ const noteSlice = createSlice({
           (note) => note._id === action.payload._id
         );
         if (index !== -1) {
-          state.notes[index] = action.payload;
+          const updatedNote = {
+            ...state.notes[index],
+            ...action.payload,
+            updatedAt: new Date().toISOString(),
+          };
+          state.notes[index] = updatedNote;
         }
       })
       .addCase(editNote.rejected, (state, action) => {

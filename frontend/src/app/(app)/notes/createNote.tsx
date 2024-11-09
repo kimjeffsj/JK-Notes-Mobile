@@ -21,6 +21,7 @@ export default function CreateNote() {
 
     try {
       await dispatch(createNote({ title, content })).unwrap();
+
       Alert.alert("Success", "Note created successfully", [
         {
           text: "OK",
@@ -28,7 +29,7 @@ export default function CreateNote() {
         },
       ]);
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to create note");
+      Alert.alert("Error", error.message || "Failed to create the note");
     }
   };
 

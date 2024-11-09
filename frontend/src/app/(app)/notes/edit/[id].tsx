@@ -2,9 +2,9 @@ import Button from "@/components/Button";
 import Input from "@/components/Input";
 import Loading from "@/components/Loading";
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
-import { editNote } from "@/shared/store/slices/noteSlice";
+import { editNote, detailNote } from "@/shared/store/slices/noteSlice";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -15,8 +15,15 @@ export default function EditNote() {
     state.notes.notes.find((note) => note._id === id)
   );
 
-  const [title, setTitle] = useState(note?.title || "");
-  const [content, setContent] = useState(note?.content || "");
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+
+  useEffect(() => {
+    if (note) {
+      setTitle(note.title);
+      setContent(note.content);
+    }
+  }, [note]);
 
   if (!note) {
     return <Loading />;
@@ -25,6 +32,7 @@ export default function EditNote() {
   const handleSubmit = async () => {
     if (!title.trim() || !content.trim()) {
       Alert.alert("Error", "Please fill in all fields");
+      return;
     }
 
     try {
@@ -47,6 +55,7 @@ export default function EditNote() {
           value={title}
           onChangeText={setTitle}
           placeholder="Enter note title"
+          inputClassName="mb-2"
         />
         <Input
           label="Content"
