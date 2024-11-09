@@ -16,7 +16,7 @@ export const storage = {
 
   getToken: async () => {
     try {
-      await AsyncStorage.getItem(StorageKeys.AUTH_TOKEN);
+      return await AsyncStorage.getItem(StorageKeys.AUTH_TOKEN);
     } catch (error) {
       console.error("Error getting token: ", error);
       return null;

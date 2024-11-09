@@ -17,33 +17,17 @@ export default function Register() {
   const { isLoading, error } = useAppSelector((state) => state.auth);
 
   const handleRegister = async () => {
-    console.log("Registration started with:", {
-      name,
-      email,
-      passwordLength: password?.length,
-      confirmPasswordMatch: password === confirmPassword,
-    });
-
     if (!name || !email || !password || !confirmPassword) {
-      console.log("Missing fields:", {
-        name: !!name,
-        email: !!email,
-        password: !!password,
-        confirmPassword: !!confirmPassword,
-      });
-
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
     if (password !== confirmPassword) {
-      console.log("Password mismatch");
       Alert.alert("Error", "Passwords do not match");
       return;
     }
 
     try {
-      console.log("Sending registration request...");
       await dispatch(
         register({ name, email, password, confirmPassword })
       ).unwrap();
@@ -51,7 +35,6 @@ export default function Register() {
         { text: "OK", onPress: () => router.replace("/(auth)/login") },
       ]);
     } catch (error: any) {
-      console.error("Register failed: ", error);
       Alert.alert("Error", error.message || "Registration failed, try again");
     }
   };

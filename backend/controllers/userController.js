@@ -6,31 +6,17 @@ const { generateTokens } = require("../middleware/authHandler");
 // POST /register
 const registerUser = async (req, res) => {
   try {
-    console.log("Register request received:", {
-      body: req.body,
-      headers: req.headers,
-    });
     const { name, email, password, confirmPassword } = req.body;
 
-    console.log("Validation check:", {
-      hasName: !!name,
-      hasEmail: !!email,
-      hasPassword: !!password,
-      hasconfirmPassword: !!confirmPassword,
-    });
-
     if (!name || !email || !password || !confirmPassword) {
-      console.log("Missing required fields");
       return res.status(422).json({ message: "Fill in required fields" });
     }
 
     const newEmail = email.toLowerCase().trim();
-    console.log("Checking for existing email:", newEmail);
 
     const emailExists = await User.findOne({ email: newEmail });
 
     if (emailExists) {
-      console.log("Email already exists:", newEmail);
       return res
         .status(409)
         .json({ message: "Email already exists, choose other email please" });
@@ -38,7 +24,6 @@ const registerUser = async (req, res) => {
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
     if (!passwordRegex.test(password)) {
-      console.log("Password validation failed");
       return res.status(422).json({
         message:
           "Password must contain at least one uppercase letter, one lowercase letter, and one number",
@@ -46,24 +31,15 @@ const registerUser = async (req, res) => {
     }
 
     if (password !== confirmPassword) {
-      console.log("Password mismatch");
       return res.status(422).json({ message: "Passwords do not match" });
     }
 
-    console.log("Hashing password...");
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    console.log("Creating new user...");
     const newUser = await User.create({
       name: name.trim(),
       email: newEmail,
       password: hashedPassword,
-    });
-
-    console.log("User created successfully:", {
-      id: newUser._id,
-      name: newUser.name,
-      email: newUser.email,
     });
 
     res.status(201).json({
@@ -89,16 +65,13 @@ const registerUser = async (req, res) => {
 // POST /login
 const loginUser = async (req, res) => {
   try {
-    console.log("Login attempt with: ", req.body);
     const { email, password } = req.body;
     if (!email || !password) {
-      console.log("MIssing fields:", { email: !!email, password: !!password });
       return res.status(422).json({ message: "All fields are required" });
     }
 
     const newEmail = email.toLowerCase();
     const user = await User.findOne({ email: newEmail });
-    console.log("Found user:", user ? "Yes" : "No");
 
     if (!user) {
       return res
@@ -107,7 +80,6 @@ const loginUser = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log("Password Match? :", isMatch);
 
     if (!isMatch) {
       return res

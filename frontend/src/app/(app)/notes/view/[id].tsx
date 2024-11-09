@@ -1,8 +1,9 @@
 import Button from "@/components/Button";
 import Loading from "@/components/Loading";
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
-import { deleteNote } from "@/shared/store/slices/noteSlice";
+import { deleteNote, detailNote } from "@/shared/store/slices/noteSlice";
 import { router, useLocalSearchParams } from "expo-router";
+import { useEffect } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 

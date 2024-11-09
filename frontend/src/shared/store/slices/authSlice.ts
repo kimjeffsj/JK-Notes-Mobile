@@ -38,23 +38,10 @@ export const register = createAsyncThunk(
   "auth/register",
   async (credentials: RegisterCredentials, { rejectWithValue }) => {
     try {
-      console.log("Making register API call with:", {
-        name: credentials.name,
-        email: credentials.email,
-        hasPassword: !!credentials.password,
-        hasConfirmPassword: !!credentials.confirmPassword, // 확인
-      });
-
       const response = await api.post("/register", credentials);
-      console.log("Register API response:", response.data);
 
       return { user: response.data.user };
     } catch (error: any) {
-      console.error("Register API error:", {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
-      });
       return rejectWithValue(
         error.response?.data?.message || "Failed to Register"
       );
