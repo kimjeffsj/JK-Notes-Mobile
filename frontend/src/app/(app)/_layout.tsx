@@ -1,41 +1,44 @@
-import Header from "@/components/Header";
-import NavMenu from "@/components/Nav/NavMenu";
-import { useAppSelector } from "@/shared/hooks/useRedux";
-import { Redirect, Stack } from "expo-router";
-import { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
 
 export default function AppLayout() {
-  const { user } = useAppSelector((state) => state.auth);
-  const [isNavOpen, setIsNavOpen] = useState(false);
-
-  if (!user) {
-    return <Redirect href="/(auth)/login" />;
-  }
-
   return (
-    <>
-      <Header onMenuPress={() => setIsNavOpen(true)} />
-      <NavMenu isVisible={isNavOpen} onClose={() => setIsNavOpen(false)} />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: "slide_from_right",
+    <Tabs
+      screenOptions={{
+        tabBarStyle: {
+          backgroundColor: "#f8f7f2",
+          borderTopColor: "#e2e2e2",
+        },
+        tabBarActiveTintColor: "#1a1a1a",
+        tabBarInactiveTintColor: "#666666",
+        headerShown: false,
+      }}
+    >
+      <Tabs.Screen
+        name="dashboard"
+        options={{
+          title: "Notes",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="document-text-outline" size={size} color={color} />
+          ),
         }}
-      >
-        <Stack.Screen name="dashboard" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="notes"
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="profile"
-          options={{
-            headerShown: false,
-          }}
-        />
-      </Stack>
-    </>
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="notes"
+        options={{
+          href: null,
+        }}
+      />
+    </Tabs>
   );
 }
