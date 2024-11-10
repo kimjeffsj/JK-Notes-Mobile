@@ -3,11 +3,12 @@ import "../global.css";
 import { useEffect } from "react";
 import { Provider } from "react-redux";
 import { Slot, SplashScreen } from "expo-router";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { store } from "@/shared/store";
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
 import { checkAuth } from "@/shared/store/slices/authSlice";
-import { SafeAreaProvider } from "react-native-safe-area-context";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -35,9 +36,11 @@ function RootNav() {
 export default function RootLayout() {
   return (
     <Provider store={store}>
-      <SafeAreaProvider>
-        <RootNav />
-      </SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <RootNav />
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     </Provider>
   );
 }

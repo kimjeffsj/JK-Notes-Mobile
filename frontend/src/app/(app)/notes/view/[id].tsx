@@ -1,4 +1,5 @@
 import Button from "@/components/Button";
+import Header from "@/components/Header";
 import Loading from "@/components/Loading";
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
 import { deleteNote, detailNote } from "@/shared/store/slices/noteSlice";
@@ -36,7 +37,8 @@ export default function NoteDetail() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-background">
+      <Header showBack title={note.title} showSearch={false} />
       <ScrollView className="flex-1 p-4">
         <View className="flex-row justify-between items-center mb-4">
           <Text className="text-2xl font-bold">{note.title}</Text>

@@ -24,10 +24,18 @@ const Button = forwardRef<TouchableOpacity, ButtonProps>(
   ) => {
     const baseStyles = "h-12 rounded-lg justify-center items-center";
     const variantStyles = {
-      primary: "bg-blue-500 active:bg-blue-600",
-      secondary: "bg-gray-500 active:bg-gray-600",
+      primary: "bg-primary active:bg-primary-light",
+      secondary:
+        "bg-background-secondary active:bg-background border border-primary",
       danger: "bg-red-500 active:bg-red-600",
     };
+
+    const textStyles = {
+      primary: "text-white",
+      secondary: "text-primary",
+      danger: "text-white",
+    };
+
     const disabledStyles = disabled ? "opacity-50" : "";
 
     return (
@@ -38,9 +46,13 @@ const Button = forwardRef<TouchableOpacity, ButtonProps>(
         disabled={isLoading || disabled}
       >
         {isLoading ? (
-          <ActivityIndicator color="white" />
+          <ActivityIndicator
+            color={variant === "secondary" ? "1a1a1a" : "white"}
+          />
         ) : (
-          <Text className="text-white font-semibold text-lg">{title}</Text>
+          <Text className={`font-semibold text-lg ${textStyles[variant]}`}>
+            {title}
+          </Text>
         )}
       </TouchableOpacity>
     );

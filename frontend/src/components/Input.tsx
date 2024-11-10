@@ -15,12 +15,12 @@ const Input = ({
   ...props
 }: InputProps) => {
   const baseContainer = "mb-4";
-  const baseInput = "w-full border rounded-lg px-4 py-2";
-  const errorStyle = error ? "border-red-500" : "border-gray-300";
+  const baseInput = "w-full border rounded-lg px-4 py-2 bg-background";
+  const errorStyle = error ? "border-red-500" : "border-border";
 
   return (
     <View className={`${baseContainer} ${containerClassName}`}>
-      {label && <Text className="text-gray-700 mb-2">{label}</Text>}
+      {label && <Text className="text-text mb-2 font-medium">{label}</Text>}
       <TextInput
         className={`${baseInput} ${errorStyle} ${inputClassName}`}
         placeholderTextColor="#9CA3AF"
