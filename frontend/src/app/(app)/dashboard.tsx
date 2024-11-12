@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { ActionSheetIOS } from "react-native";
+import { Swipeable } from "react-native-gesture-handler";
 
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
 import { deleteNote, fetchNotes } from "@/shared/store/slices/noteSlice";
@@ -14,7 +16,6 @@ import Loading from "@/components/Loading";
 import Input from "@/components/Input";
 import { Ionicons } from "@expo/vector-icons";
 import Header from "@/components/Header";
-import { Swipeable } from "react-native-gesture-handler";
 import NoteListItem from "@/components/NoteListItem";
 
 type SortOption = "updated" | "created" | "title";
@@ -46,29 +47,6 @@ export default function Dashboard() {
     await loadNotes();
     setRefreshing(false);
   };
-
-  const handleDelete = useCallback(
-    async (noteId: string) => {
-      Alert.alert("Delete Note", "Aer you sure you want to delete this note?", [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await dispatch(deleteNote(noteId)).unwrap();
-            } catch (error: any) {
-              Alert.alert("Error", "Failed to delete note");
-            }
-          },
-        },
-      ]);
-    },
-    [dispatch]
-  );
 
   const togglePin = useCallback((noteId: string) => {
     setPinnedNotes((prev) =>
@@ -136,6 +114,29 @@ export default function Dashboard() {
     [dispatch, togglePin]
   );
 
+  const handleSort = useCallback(() => {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ["Cancel", "Date Updated", "Date Created", "Title"],
+        cancelButtonIndex: 0,
+        title: "Sort Notes By",
+      },
+      (buttonIndex) => {
+        switch (buttonIndex) {
+          case 1:
+            setSortBy("updated");
+            break;
+          case 2:
+            setSortBy("created");
+            break;
+          case 3:
+            setSortBy("title");
+            break;
+        }
+      }
+    );
+  }, []);
+
   const filteredAndSortedNotes = notes
     .filter(
       (note) =>
@@ -175,6 +176,11 @@ export default function Dashboard() {
         title="Notes"
         showSearch
         onSearchPress={() => setIsSearchVis(!isSearchVis)}
+        rightElement={
+          <TouchableOpacity onPress={handleSort} className="p-2">
+            <Ionicons name="filter-outline" size={22} color="#1a1a1a" />
+          </TouchableOpacity>
+        }
       />
 
       {isSearchVis && (
@@ -202,7 +208,7 @@ export default function Dashboard() {
         renderItem={({ item }) => (
           <Swipeable
             ref={(ref) => {
-              swipeableRefs.current[item._id] = ref; // 여기서 ref 연결
+              swipeableRefs.current[item._id] = ref;
             }}
             renderLeftActions={() => renderSwipeable("right")}
             renderRightActions={() => renderSwipeable("left")}

@@ -8,6 +8,7 @@ interface HeaderProps {
   showSearch?: boolean;
   title?: string;
   onSearchPress?: () => void;
+  rightElement?: React.ReactNode;
 }
 
 export default function Header({
@@ -15,6 +16,7 @@ export default function Header({
   showSearch = false,
   title = "Notes",
   onSearchPress,
+  rightElement,
 }: HeaderProps) {
   return (
     <SafeAreaView className="bg-background">
@@ -30,11 +32,10 @@ export default function Header({
           )}
           <Text className="text-xl font-semibold text-primary">{title}</Text>
         </View>
-      </View>
 
-      <View className="flex-row items-center space-x-4">
+        {rightElement}
         {showSearch && (
-          <TouchableOpacity onPress={onSearchPress} className="p-2">
+          <TouchableOpacity onPress={onSearchPress} className="p-2 text-right">
             <Ionicons name="search-outline" size={22} color="#1a1a1a" />
           </TouchableOpacity>
         )}
