@@ -3,66 +3,107 @@ import Header from "@/components/Header";
 import Loading from "@/components/Loading";
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
 import { deleteNote, detailNote } from "@/shared/store/slices/noteSlice";
+import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect } from "react";
-import { Alert, ScrollView, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo } from "react";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function NoteDetail() {
-  const { id } = useLocalSearchParams();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const dispatch = useAppDispatch();
   const note = useAppSelector((state) =>
     state.notes.notes.find((note) => note._id === id)
   );
 
+  const formattedDate = useMemo(() => {
+    if (!note) return "";
+
+    const date = new Date(note.updatedAt);
+    const now = new Date();
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+
+    if (diffInHours < 24) {
+      return date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+
+        hour12: true,
+      });
+    } else if (diffInHours < 48) {
+      return "Yesterday";
+    } else {
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+      });
+    }
+  }, [note?.updatedAt]);
+
+  const handleDelete = useCallback(async () => {
+    if (!note) return;
+
+    Alert.alert("Delete Note", "Are you sure you want to delete this note?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await dispatch(deleteNote(note._id)).unwrap();
+            Alert.alert("Success", "Note deleted successfully", [
+              {
+                text: "OK",
+                onPress: () => router.back(),
+              },
+            ]);
+          } catch (error: any) {
+            Alert.alert("Error", "Failed to delete note");
+          }
+        },
+      },
+    ]);
+  }, [note, dispatch]);
+
+  const handleEdit = useCallback(() => {
+    if (!note) return;
+    router.push(`/notes/edit/${note._id}`);
+  }, [note]);
+
   if (!note) {
     return <Loading />;
   }
 
-  const handleDelete = async () => {
-    try {
-      await dispatch(deleteNote(note._id)).unwrap();
-      Alert.alert("Success", "Note deleted successfully");
-      router.back();
-    } catch (error: any) {
-      Alert.alert("Error", error.message);
-    }
-  };
-
-  const confirmDelete = () => {
-    Alert.alert("Delete Note", "Are you sure you want to delete this note?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", onPress: handleDelete, style: "destructive" },
-    ]);
-  };
-
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <Header showBack title={note.title} showSearch={false} />
-      <ScrollView className="flex-1 p-4">
-        <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-2xl font-bold">{note.title}</Text>
-          <View>
-            <Button
-              title="Edit"
-              onPress={() => router.push(`/notes/edit/${note._id}`)}
-              variant="secondary"
-              className="px-4"
-            />
-            <Button
-              title="Delete"
-              onPress={confirmDelete}
-              variant="danger"
-              className="px-4"
-            />
+      <Header
+        showBack
+        title={note.title}
+        rightElement={
+          <View className="flex-row items-center">
+            <TouchableOpacity className="p-2" onPress={handleEdit}>
+              <Ionicons name="create-outline" size={22} color="#1a1a1a" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleDelete} className="p-2">
+              <Ionicons name="trash-outline" size={22} color="#FF3B30" />
+            </TouchableOpacity>
           </View>
+        }
+      />
+
+      <ScrollView className="flex-1 p-4">
+        <View className="py-4 border-b border-border">
+          <Text className="text-2xl font-bold text-primary">{note.title}</Text>
+          <Text className="text-text-secondary text-sm mt-1">
+            Last Updated: {formattedDate}
+          </Text>
         </View>
-
-        <Text className="text-gray-600 text-base">{note.content}</Text>
-
-        <Text className="text-gray-400 mt-4 text-sm">
-          Last updated: {new Date(note.updatedAt).toLocaleString()}
-        </Text>
+        <View className="py-4">
+          <Text className="text-primary text-base leading-6">
+            {note.content}
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { Link, router } from "expo-router";
+import { router } from "expo-router";
 
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
 import { login } from "@/shared/store/slices/authSlice";

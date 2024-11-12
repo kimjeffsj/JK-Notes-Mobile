@@ -1,6 +1,6 @@
 import { Note, NotesState } from "@/shared/types/note/note";
-import api from "@/utils/api";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import api from "@/utils/api";
 
 const initialState: NotesState = {
   notes: [],
@@ -62,10 +62,8 @@ export const editNote = createAsyncThunk(
       const response = await api.post(`/notes/edit/${id}`, data);
       return {
         _id: id,
-        creator: response.data.creator,
-        createdAt: response.data.createdAt,
         ...data,
-        updateAt: new Date().toISOString(),
+        ...response.data.updatedNote,
       };
     } catch (error: any) {
       return rejectWithValue(
@@ -93,11 +91,16 @@ const noteSlice = createSlice({
   name: "notes",
   initialState,
   reducers: {
-    setCurrentNote: (state, action) => {
-      state.currentNote = action.payload;
-    },
-    clearCurrentNote: (state) => {
-      state.currentNote = null;
+    updateNoteInState: (state, action) => {
+      const { id, updates } = action.payload;
+      const noteIndex = state.notes.findIndex((note) => note._id === id);
+      if (noteIndex !== -1) {
+        state.notes[noteIndex] = {
+          ...state.notes[noteIndex],
+          ...updates,
+          updatedAt: new Date().toISOString(),
+        };
+      }
     },
     clearError: (state) => {
       state.error = null;
@@ -161,16 +164,18 @@ const noteSlice = createSlice({
       })
       .addCase(editNote.fulfilled, (state, action) => {
         state.isLoading = false;
-        const index = state.notes.findIndex(
+        const noteIndex = state.notes.findIndex(
           (note) => note._id === action.payload._id
         );
-        if (index !== -1) {
-          const updatedNote = {
-            ...state.notes[index],
+        if (noteIndex !== -1) {
+          state.notes[noteIndex] = {
+            ...state.notes[noteIndex],
             ...action.payload,
-            updatedAt: new Date().toISOString(),
           };
-          state.notes[index] = updatedNote;
+          state.notes.sort(
+            (a, b) =>
+              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          );
         }
       })
       .addCase(editNote.rejected, (state, action) => {
@@ -194,6 +199,5 @@ const noteSlice = createSlice({
   },
 });
 
-export const { setCurrentNote, clearCurrentNote, clearError } =
-  noteSlice.actions;
+export const { updateNoteInState, clearError } = noteSlice.actions;
 export default noteSlice.reducer;
