@@ -1,28 +1,25 @@
+// src/app/(app)/notes/_layout.tsx
 import { Stack } from "expo-router";
 
 export default function NotesLayout() {
   return (
-    <Stack>
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen
         name="createNote"
         options={{
-          title: "New Note",
           presentation: "modal",
-          headerLeft: () => null,
         }}
       />
-
-      <Stack.Screen
-        name="view/[id]"
-        options={{
-          title: "Note Details",
-        }}
-      />
-
       <Stack.Screen
         name="edit/[id]"
         options={{
-          title: "Edit Note",
+          presentation: "modal",
+        }}
+      />
+      <Stack.Screen
+        name="view/[id]"
+        options={{
+          presentation: "modal",
         }}
       />
     </Stack>

@@ -1,83 +1,133 @@
-import Button from "@/components/Button";
-import Input from "@/components/Input";
-import Loading from "@/components/Loading";
-import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
-import { editNote, detailNote } from "@/shared/store/slices/noteSlice";
+import { useCallback, useEffect, useState } from "react";
+import {
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
-import { Alert, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
+import Header from "@/components/Header";
+import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
+import { editNote } from "@/shared/store/slices/noteSlice";
 
 export default function EditNote() {
-  const { id } = useLocalSearchParams();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const dispatch = useAppDispatch();
+
   const note = useAppSelector((state) =>
     state.notes.notes.find((note) => note._id === id)
   );
 
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [title, setTitle] = useState(note?.title || "");
+  const [content, setContent] = useState(note?.content || "");
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   useEffect(() => {
-    if (note) {
-      setTitle(note.title);
-      setContent(note.content);
+    if (!note) {
+      Alert.alert("Error", "Note not found");
+      router.back();
     }
   }, [note]);
 
-  if (!note) {
-    return <Loading />;
-  }
+  const autoSave = useCallback(async () => {
+    if (!id || (!title.trim() && !content.trim())) return;
 
-  const handleSubmit = async () => {
-    if (!title.trim() || !content.trim()) {
-      Alert.alert("Error", "Please fill in all fields");
+    try {
+      setIsSaving(true);
+      await dispatch(
+        editNote({
+          id,
+          data: {
+            title: title.trim() || "Untitled Note",
+            content: content.trim(),
+          },
+        })
+      ).unwrap();
+      setLastSaved(new Date());
+    } catch (error) {
+      Alert.alert("Error", "Auto-save Failed");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [id, title, content, dispatch]);
+
+  useEffect(() => {
+    const timer = setTimeout(autoSave, 30000);
+    return () => clearTimeout(timer);
+  }, [title, content, autoSave]);
+
+  const handleDone = useCallback(async () => {
+    if (!title.trim() && !content.trim()) {
+      router.back();
       return;
     }
 
     try {
-      await dispatch(
-        editNote({ id: note._id, data: { title, content } })
-      ).unwrap();
-      Alert.alert("Success", "Note updated successfully", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      await autoSave();
+      router.back();
     } catch (error: any) {
-      Alert.alert("Error", error.message);
+      Alert.alert("Error", "Failed to save note");
     }
+  }, [autoSave]);
+
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <ScrollView className="flex-1 p-4">
-        <Input
-          label="Title"
-          value={title}
-          onChangeText={setTitle}
-          placeholder="Enter note title"
-          inputClassName="mb-2"
-        />
-        <Input
-          label="Content"
-          value={content}
-          onChangeText={setContent}
-          placeholder="Enter note content"
-          multiline
-          numberOfLines={10}
-          textAlignVertical="top"
-          inputClassName="h-40 py-2"
+    <TouchableWithoutFeedback onPress={dismissKeyboard}>
+      <KeyboardAvoidingView className="flex-1 bg-background">
+        <Header
+          showBack
+          rightElement={
+            <TouchableOpacity onPress={handleDone} className="px-4 py-2">
+              <Text className="text-primary text-base text-right font-medium">
+                {isSaving ? "Saving..." : "Done"}
+              </Text>
+            </TouchableOpacity>
+          }
         />
 
-        <View className="flex-row space-x-2 mt-4">
-          <Button
-            title="Cancel"
-            onPress={() => router.back()}
-            variant="secondary"
-            className="flex-1"
-          />
-          <Button title="Save" onPress={handleSubmit} className="flex-1" />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        <ScrollView
+          className="flex-1"
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="px-4">
+            {lastSaved && (
+              <Text className="text-text-secondary text-sm text-right mb-2">
+                Last saved: {lastSaved.toLocaleString()}
+              </Text>
+            )}
+
+            <TextInput
+              className="text-xl font-semibold text-primary py-4"
+              placeholder="Title"
+              value={title}
+              onChangeText={setTitle}
+              placeholderTextColor="#999"
+            />
+
+            <TextInput
+              className="flex-1 text-base text-primary"
+              placeholder="Start writing here"
+              value={content}
+              onChangeText={setContent}
+              multiline
+              textAlignVertical="top"
+              placeholderTextColor="#999"
+              scrollEnabled={false}
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
