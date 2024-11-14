@@ -73,8 +73,21 @@ export default function Settings() {
         onPress: async () => {
           try {
             await dispatch(logout()).unwrap();
+
+            router.replace("/(public)/welcome");
           } catch (error: any) {
-            Alert.alert("Error", "Failed to logout. Please try again.");
+            Alert.alert(
+              "Error",
+              "Failed to logout properly. THe app will restart.",
+              [
+                {
+                  text: "OK",
+                  onPress: () => {
+                    router.replace("/(public)/welcome");
+                  },
+                },
+              ]
+            );
           }
         },
       },
@@ -106,7 +119,7 @@ export default function Settings() {
           <SettingsItem
             icon="person-outline"
             title="Edit Profile"
-            onPress={() => router.push("/(auth)/profile/edit")}
+            onPress={() => router.push("../(auth)/profile/edit")}
           />
           {/* <SettingsItem
             icon="key-outline"

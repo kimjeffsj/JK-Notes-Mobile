@@ -4,6 +4,7 @@ import {
   AuthState,
   LoginCredentials,
   RegisterCredentials,
+  User,
 } from "@/shared/types/auth/auth";
 import api from "@/utils/api";
 import { storage } from "@/utils/storage";
@@ -53,10 +54,25 @@ export const logout = createAsyncThunk(
   "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
-      await api.get("/logout");
+      const token = await storage.getToken();
+
+      if (token) {
+        try {
+          await api.post("/logout", { refreshToken: token });
+        } catch (error: any) {
+          console.warn("Backend logout failed, continuing with local logout");
+        }
+      }
+
       await storage.clearAll();
-      return;
+
+      api.defaults.headers.common["Authorization"] = null;
+
+      return true;
     } catch (error: any) {
+      console.error("Logout error:", error);
+
+      await storage.clearAll();
       return rejectWithValue(
         error.response?.data?.message || "Failed to logout"
       );
@@ -101,10 +117,25 @@ export const updateProfile = createAsyncThunk(
       const { auth } = getState() as { auth: AuthState };
       if (!auth.user) throw new Error("No user found");
 
-      const response = await api.post(`/profile/${auth.user.id}`, data);
-      await storage.setUser(response.data.user);
+      const updateData = {
+        name: data.name || auth.user.name,
+        email: data.email || auth.user.email,
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+        confirmNewPassword: data.confirmNewPassword,
+      };
 
-      return { user: response.data.user };
+      const response = await api.post(`/profile/${auth.user.id}`, updateData);
+
+      const updatedUser: User = {
+        id: auth.user.id,
+        name: data.name || auth.user.name,
+        email: data.email || auth.user.email,
+      };
+
+      await storage.setUser(updatedUser);
+
+      return { user: updatedUser };
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to update profile"
@@ -161,6 +192,7 @@ const authSlice = createSlice({
       // Logout
       .addCase(logout.pending, (state) => {
         state.isLoading = true;
+        state.error = null;
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
@@ -169,6 +201,8 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(logout.rejected, (state, action) => {
+        state.user = null;
+        state.token = null;
         state.isLoading = false;
         state.error = action.payload as string;
       })
