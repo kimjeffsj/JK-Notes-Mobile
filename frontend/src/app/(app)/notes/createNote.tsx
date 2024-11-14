@@ -1,15 +1,16 @@
-import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import Header from "@/components/Header";
 import { useAppDispatch } from "@/shared/hooks/useRedux";
@@ -62,40 +63,58 @@ export default function CreateNote() {
     }
   }, [autoSave]);
 
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
+
   return (
-    <KeyboardAvoidingView className="flex-1 bg-background">
-      <Header
-        showBack
-        title="New Note"
-        rightElement={
-          <TouchableOpacity className="px-4 py-2" onPress={handleDone}>
-            <Text className="text-primary text-base text-right font-medium">
-              {isSaving ? "Saving..." : "Done"}
-            </Text>
-          </TouchableOpacity>
-        }
-      />
-
-      <View className="flex-1 px-4">
-        <TextInput
-          className="text-xl font-semibold text-primary py-4 border-b border-border"
-          placeholder="Title"
-          value={title}
-          onChangeText={setTitle}
-          placeholderTextColor="#999"
-          autoFocus
+    <TouchableWithoutFeedback onPress={dismissKeyboard}>
+      <KeyboardAvoidingView className="flex-1 bg-background">
+        <Header
+          showBack
+          title="New Note"
+          rightElement={
+            <TouchableOpacity className="px-4 py-2" onPress={handleDone}>
+              <Text className="text-primary text-base text-right font-medium">
+                {isSaving ? "Saving..." : "Done"}
+              </Text>
+            </TouchableOpacity>
+          }
         />
 
-        <TextInput
-          className="flex-1 text-base text-primary mx-4 py-4"
-          placeholder="Start writing here"
-          value={content}
-          onChangeText={setContent}
-          multiline
-          textAlignVertical="top"
-          placeholderTextColor="#999"
-        />
-      </View>
-    </KeyboardAvoidingView>
+        <ScrollView
+          className="flex-1"
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="flex-1 px-4">
+            {lastSaved && (
+              <Text className="text-text-secondary text-sm text-right mt-2">
+                Last saved: {lastSaved.toLocaleString()}
+              </Text>
+            )}
+
+            <TextInput
+              className="text-xl font-semibold text-primary py-4 border-b border-border"
+              placeholder="Title"
+              value={title}
+              onChangeText={setTitle}
+              placeholderTextColor="#999"
+              autoFocus
+            />
+
+            <TextInput
+              className="flex-1 text-base text-primary py-4"
+              placeholder="Start writing here"
+              value={content}
+              onChangeText={setContent}
+              multiline
+              textAlignVertical="top"
+              placeholderTextColor="#999"
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
