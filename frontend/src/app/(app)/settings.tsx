@@ -98,7 +98,7 @@ export default function Settings() {
           </Text>
           <Text className="text-text-secondary">{user?.email}</Text>
           <Text className="text-text-secondary mt-2">
-            {notes.length} {notes.length === 1 ? "Note" : "Notes"}
+            Total {notes.length} {notes.length === 1 ? "Note" : "Notes"} written
           </Text>
         </View>
 
@@ -106,19 +106,19 @@ export default function Settings() {
           <SettingsItem
             icon="person-outline"
             title="Edit Profile"
-            onPress={() => router.push("profile/edit")}
+            onPress={() => router.push("/(auth)/profile/edit")}
           />
-          <SettingsItem
+          {/* <SettingsItem
             icon="key-outline"
             title="Change Password"
             onPress={() => router.push("profile/password")}
-          />
+          /> */}
 
-          <SettingsItem
+          {/* <SettingsItem
             icon="notifications-outline"
             title="Notifications"
             onPress={() => router.push("/settings/notifications")}
-          />
+          /> */}
         </SettingsSection>
 
         <SettingsSection title="Security" className="mt-4">

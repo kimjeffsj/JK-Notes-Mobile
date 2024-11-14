@@ -108,15 +108,15 @@ export default function EditNote() {
             )}
 
             <TextInput
-              className="text-xl font-semibold text-primary py-4"
+              className="text-xl font-semibold text-primary py-4 border-b border-border"
               placeholder="Title"
-              value={title}
+              value={title === "Untitled Note" ? "" : title}
               onChangeText={setTitle}
               placeholderTextColor="#999"
             />
 
             <TextInput
-              className="flex-1 text-base text-primary"
+              className="flex-1 text-base text-primary py-4"
               placeholder="Start writing here"
               value={content}
               onChangeText={setContent}

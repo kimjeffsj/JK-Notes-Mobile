@@ -78,7 +78,7 @@ export default function CreateNote() {
 
       <View className="flex-1 px-4">
         <TextInput
-          className="text-xl font-semibold text-primary py-4"
+          className="text-xl font-semibold text-primary py-4 border-b border-border"
           placeholder="Title"
           value={title}
           onChangeText={setTitle}
@@ -87,7 +87,7 @@ export default function CreateNote() {
         />
 
         <TextInput
-          className="flex-1 text-base text-primary mx-4"
+          className="flex-1 text-base text-primary mx-4 py-4"
           placeholder="Start writing here"
           value={content}
           onChangeText={setContent}
@@ -96,28 +96,6 @@ export default function CreateNote() {
           placeholderTextColor="#999"
         />
       </View>
-      <SafeAreaView
-        edges={["bottom"]}
-        className="bg-background border-t border-border"
-      >
-        <View className="flex-row items-center justify-around py-2 px-4 border-t border-border bg-background">
-          <TouchableOpacity className="p-2">
-            <Ionicons name="text" size={22} color="#1a1a1a" />
-          </TouchableOpacity>
-          <TouchableOpacity className="p-2">
-            <Ionicons name="list" size={22} color="#1a1a1a" />
-          </TouchableOpacity>
-          <TouchableOpacity className="p-2">
-            <Ionicons name="checkbox-outline" size={22} color="#1a1a1a" />
-          </TouchableOpacity>
-          <TouchableOpacity className="p-2">
-            <Ionicons name="camera-outline" size={22} color="#1a1a1a" />
-          </TouchableOpacity>
-          <TouchableOpacity className="p-2">
-            <Ionicons name="share-outline" size={22} color="#1a1a1a" />
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
     </KeyboardAvoidingView>
   );
 }

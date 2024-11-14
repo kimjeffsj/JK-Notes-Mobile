@@ -10,7 +10,7 @@ export default function UserProfile({ onProfilePress }: UserProfileProps) {
   const { user } = useAppSelector((state) => state.auth);
 
   const handleProfilePress = () => {
-    router.push("/(app)/profile");
+    router.push("/(app)/settings");
     onProfilePress?.();
   };
 

@@ -77,7 +77,7 @@ export default function NavMenu({ isVisible, onClose }: NavMenuProps) {
               <TouchableOpacity
                 className="flex-row items-center py-3"
                 onPress={() => {
-                  router.push("/(app)/profile");
+                  router.push("/(app)/settings");
                   onClose();
                 }}
               >

@@ -17,6 +17,16 @@
       "expo-secure-store"
     ],
     "name": "frontend",
-    "slug": "frontend"
+    "slug": "frontend",
+    "newArchEnabled": true,
+    "extra": {
+      "router": {
+        "origin": "https://n"
+      }
+    },
+    "experiments": {
+      "tsconfigPaths": true,
+      "typedRoutes": true
+    }
   }
 }
