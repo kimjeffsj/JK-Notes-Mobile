@@ -1,13 +1,18 @@
-import Button from "@/components/Button";
 import Header from "@/components/Header";
 import Loading from "@/components/Loading";
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
-import { deleteNote, detailNote } from "@/shared/store/slices/noteSlice";
+import { deleteNote } from "@/shared/store/slices/noteSlice";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useCallback, useMemo } from "react";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function NoteDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -76,7 +81,7 @@ export default function NoteDetail() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <KeyboardAvoidingView className="flex-1 bg-background">
       <Header
         showBack
         title={note.title}
@@ -105,6 +110,6 @@ export default function NoteDetail() {
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }

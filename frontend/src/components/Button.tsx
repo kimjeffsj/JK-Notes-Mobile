@@ -41,7 +41,7 @@ const Button = forwardRef<TouchableOpacity, ButtonProps>(
     return (
       <TouchableOpacity
         ref={ref}
-        className={`${baseStyles} ${variantStyles[variant]} ${disabledStyles} ${className}`}
+        className={`${baseStyles} ${variantStyles[variant]} ${disabledStyles} ${className} mt-2`}
         onPress={onPress}
         disabled={isLoading || disabled}
       >

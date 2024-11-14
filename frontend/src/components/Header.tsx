@@ -19,8 +19,8 @@ export default function Header({
   rightElement,
 }: HeaderProps) {
   return (
-    <SafeAreaView className="bg-background">
-      <View className="flex-row justify-between items-center px-4 py-2 border-b border-border">
+    <SafeAreaView edges={["top"]} className="bg-background">
+      <View className="flex-row justify-between items-center px-4 py-2 border-b border-border ">
         <View className="flex-row items-center">
           {showBack && (
             <TouchableOpacity
