@@ -6,12 +6,13 @@ import {
   RegisterCredentials,
   User,
 } from "@/shared/types/auth/auth";
-import api from "@/utils/api";
+import api, { isTokenExpired } from "@/utils/api";
 import { storage } from "@/utils/storage";
 
 const initialState: AuthState = {
   user: null,
   token: null,
+  refreshToken: null,
   isLoading: false,
   error: null,
 };
@@ -21,12 +22,13 @@ export const login = createAsyncThunk(
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
       const response = await api.post("/login", credentials);
-      const { accessToken, user } = response.data;
+      const { accessToken, refreshToken, user } = response.data;
 
       await storage.setToken(accessToken);
+      await storage.setRefreshToken(refreshToken);
       await storage.setUser(user);
 
-      return { accessToken, user };
+      return { accessToken, refreshToken, user };
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to login"
@@ -84,18 +86,32 @@ export const checkAuth = createAsyncThunk(
   "auth/check",
   async (_, { rejectWithValue }) => {
     try {
-      const token = await storage.getToken();
-      const user = await storage.getUser();
+      const [token, refreshToken, user] = await Promise.all([
+        storage.getToken(),
+        storage.getRefreshToken(),
+        storage.getUser(),
+      ]);
 
-      if (!token || !user) {
+      if (!token || !refreshToken || !user) {
         throw new Error("No auth data");
       }
 
-      return { token, user };
+      if (isTokenExpired(token)) {
+        try {
+          const response = await api.post("/refresh", { refreshToken });
+          const { accessToken: newToken } = response.data;
+          await storage.setToken(newToken);
+          return { token: newToken, refreshToken, user };
+        } catch {
+          throw new Error("Token refresh failed");
+        }
+      }
+
+      return { token, refreshToken, user };
     } catch (error: any) {
       await storage.clearAll();
       return rejectWithValue(
-        error.response?.data?.message || "Authentication che k failed"
+        error.response?.data?.message || "Authentication check failed"
       );
     }
   }
@@ -167,6 +183,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
         state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
@@ -197,12 +214,14 @@ const authSlice = createSlice({
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.token = null;
+        state.refreshToken = null;
         state.isLoading = false;
         state.error = null;
       })
       .addCase(logout.rejected, (state, action) => {
         state.user = null;
         state.token = null;
+        state.refreshToken = null;
         state.isLoading = false;
         state.error = action.payload as string;
       })
@@ -216,6 +235,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        state.refreshToken = action.payload.refreshToken;
         state.error = null;
       })
       .addCase(checkAuth.rejected, (state) => {

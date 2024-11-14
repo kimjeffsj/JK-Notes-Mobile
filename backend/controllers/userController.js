@@ -176,15 +176,17 @@ const logout = async (req, res) => {
   try {
     const { refreshToken } = req.body;
 
-    await User.findOneAndUpdate(
-      { refreshToken },
-      {
-        $set: {
-          refreshToken: null,
-          refreshTokenExpiresAt: null,
-        },
-      }
-    );
+    if (refreshToken) {
+      await User.findOneAndUpdate(
+        { refreshToken },
+        {
+          $set: {
+            refreshToken: null,
+            refreshTokenExpiresAt: null,
+          },
+        }
+      );
+    }
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     res.status(500).json({ message: "Logout failed" });
@@ -194,8 +196,33 @@ const logout = async (req, res) => {
 // POST /refresh-token
 const refreshToken = async (req, res) => {
   try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({ message: "Refresh token is required" });
+    }
+
+    const userId = await verifyRefreshToken(refreshToken);
+
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+      generateTokens(userId);
+
+    const user = await User.findById(userId);
+    user.refreshToken = newRefreshToken;
+    user.refreshTokenExpiresAt = new Data(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await user.save();
+
+    return res.status(200).json({
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+    });
   } catch (error) {
-    if (error.name === "JsonWebTokenError") {
+    if (error.name === "Invalid refresh token") {
       return res.status(401).json({ message: "Invalid refresh token" });
     }
     res.status(500).json({ message: "Failed to refresh token" });

@@ -17,6 +17,21 @@ const generateTokens = (userId) => {
   return { accessToken, refreshToken };
 };
 
+const verifyRefreshToken = async (token) => {
+  try {
+    const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user || user.refreshToken !== token) {
+      throw new Error("Invalid refresh token");
+    }
+
+    return decoded.id;
+  } catch (error) {
+    throw new Error("Invalid refresh token");
+  }
+};
+
 async function isAuth(req, res, next) {
   try {
     const tokenHeader = req.headers.authorization;
@@ -60,4 +75,4 @@ async function isAuth(req, res, next) {
   }
 }
 
-module.exports = { isAuth, generateTokens };
+module.exports = { isAuth, generateTokens, verifyRefreshToken };

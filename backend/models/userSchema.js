@@ -18,10 +18,15 @@ const userSchema = new Schema(
     },
     password: { type: String, required: true },
     notes: { type: Number, default: 0, min: 0 },
-    refreshToken: { type: String },
-    refreshTokenExpiresAt: { type: Date },
+    refreshToken: { type: String, default: null },
+    refreshTokenExpiresAt: { type: Date, default: null },
+    lastLogin: { type: Date, default: null },
   },
   { timestamps: true }
 );
+
+userSchema.methods.isRefreshTokenExpired = function () {
+  return !this.refreshTokenExpiresAt || this.refreshTokenExpiresAt < new Date();
+};
 
 module.exports = model("User", userSchema);
