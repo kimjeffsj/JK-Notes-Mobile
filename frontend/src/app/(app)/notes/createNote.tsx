@@ -51,17 +51,25 @@ export default function CreateNote() {
 
   const handleDone = useCallback(async () => {
     if (!title.trim() && !content.trim()) {
-      router.back();
+      router.push("/(app)/dashboard");
       return;
     }
 
     try {
-      await autoSave();
-      router.back();
-    } catch (error) {
+      const result = await dispatch(
+        createNote({
+          title: title.trim() || "Untitled Note",
+          content: content.trim(),
+        })
+      ).unwrap();
+
+      if (result?._id) {
+        router.push(`/notes/view/${result._id}`);
+      }
+    } catch (error: any) {
       Alert.alert("Error", "Failed to save note");
     }
-  }, [autoSave]);
+  }, [title, content, dispatch]);
 
   const dismissKeyboard = () => {
     Keyboard.dismiss();

@@ -27,14 +27,34 @@ export default function EditNote() {
   const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
   const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [lastSaved, setLastSaved] = useState<Date | null>(
+    note ? new Date(note.updatedAt) : null
+  );
 
   useEffect(() => {
     if (!note) {
       Alert.alert("Error", "Note not found");
-      router.back();
+      router.replace("/(app)/dashboard");
     }
   }, [note]);
+
+  const formatLastSaved = useCallback((date: Date) => {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) {
+      return "Just now";
+    }
+    if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
+    }
+    if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+    }
+    return date.toLocaleString();
+  }, []);
 
   const autoSave = useCallback(async () => {
     if (!id || (!title.trim() && !content.trim())) return;
@@ -65,17 +85,26 @@ export default function EditNote() {
 
   const handleDone = useCallback(async () => {
     if (!title.trim() && !content.trim()) {
-      router.back();
+      router.replace("/(app)/dashboard");
       return;
     }
 
     try {
-      await autoSave();
-      router.back();
+      await dispatch(
+        editNote({
+          id,
+          data: {
+            title: title.trim() || "Untitled Note",
+            content: content.trim(),
+          },
+        })
+      ).unwrap();
+
+      router.push(`/notes/view/${id}`);
     } catch (error: any) {
       Alert.alert("Error", "Failed to save note");
     }
-  }, [autoSave]);
+  }, [id, title, content, dispatch]);
 
   const dismissKeyboard = () => {
     Keyboard.dismiss();
@@ -102,9 +131,14 @@ export default function EditNote() {
         >
           <View className="px-4">
             {lastSaved && (
-              <Text className="text-text-secondary text-sm text-right mb-2">
-                Last saved: {lastSaved.toLocaleString()}
-              </Text>
+              <View className="flex-row justify-end items-center mt-2 mb-2">
+                <Text className="text-text-secondary text-sm mr-1">
+                  Last saved:
+                </Text>
+                <Text className="text-text-secondary text-sm">
+                  {formatLastSaved(lastSaved)}
+                </Text>
+              </View>
             )}
 
             <TextInput

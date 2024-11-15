@@ -78,31 +78,27 @@ export default function Dashboard() {
     (noteId: string, direction: "left" | "right") => {
       if (direction === "left") {
         // Delete action
-        Alert.alert(
-          "Delete Note",
-          "Are you sure you want to delete this note?",
-          [
-            {
-              text: "Cancel",
-              style: "cancel",
-              onPress: () => {
+        Alert.alert("Delete Note", "This action can't be undone", [
+          {
+            text: "Cancel",
+            style: "cancel",
+            onPress: () => {
+              swipeableRefs.current[noteId]?.close();
+            },
+          },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                await dispatch(deleteNote(noteId)).unwrap();
+              } catch (error) {
+                Alert.alert("Error", "Failed to delete note");
                 swipeableRefs.current[noteId]?.close();
-              },
+              }
             },
-            {
-              text: "Delete",
-              style: "destructive",
-              onPress: async () => {
-                try {
-                  await dispatch(deleteNote(noteId)).unwrap();
-                } catch (error) {
-                  Alert.alert("Error", "Failed to delete note");
-                  swipeableRefs.current[noteId]?.close();
-                }
-              },
-            },
-          ]
-        );
+          },
+        ]);
       } else {
         // Pin action
         togglePin(noteId);
