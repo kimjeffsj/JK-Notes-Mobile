@@ -85,6 +85,7 @@ export default function NoteDetail() {
       <Header
         showBack
         title={note.title}
+        onBackPress={() => router.push("/(app)/dashboard")}
         rightElement={
           <View className="flex-row items-center">
             <TouchableOpacity className="p-2" onPress={handleEdit}>

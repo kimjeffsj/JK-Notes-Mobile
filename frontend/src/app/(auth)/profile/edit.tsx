@@ -106,7 +106,11 @@ export default function EditProfile() {
 
   return (
     <View className="flex-1 bg-background">
-      <Header showBack title="Edit Profile" />
+      <Header
+        showBack
+        title="Edit Profile"
+        onBackPress={() => router.push("/(app)/settings")}
+      />
       <ScrollView
         className="flex-1 px-4"
         contentContainerStyle={{ paddingTop: 16 }}
