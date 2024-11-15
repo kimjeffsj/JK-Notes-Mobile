@@ -2,10 +2,19 @@ import Header from "@/components/Header";
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
 import { logout } from "@/shared/store/slices/authSlice";
 import { deleteAllNotes } from "@/shared/store/slices/noteSlice";
+import { setTheme } from "@/shared/store/slices/settingSlice";
+import { ThemeType } from "@/shared/types/settings/settings";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useCallback } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActionSheetIOS,
+  Alert,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface SettingsSectionProps {
   title?: string;
@@ -48,29 +57,84 @@ const SettingsItem = ({
   <TouchableOpacity
     onPress={onPress}
     className={`flex-row items-center px-4 py-3 ${
-      showBorder ? "border-b border-border" : ""
+      showBorder ? "border-b border-border dark:border-border-dark" : ""
     }`}
   >
     <Ionicons
       name={icon}
       size={22}
-      color={textColor === "text-primary" ? "1a1a1a" : "#FF3B30"}
+      className={
+        textColor === "text-primary"
+          ? "text-primary dark:text-primary-dark"
+          : "text-red-500"
+      }
     />
     <View className="flex-1 ml-3">
-      <Text className={`text-base ${textColor}`}>{title}</Text>
+      <Text
+        className={`text-base ${textColor} ${
+          textColor === "text-primary" ? "dark:text-primary-dark" : ""
+        }`}
+      >
+        {title}
+      </Text>
       {subtitle && (
-        <Text className="text-text-secondary text-sm">{subtitle}</Text>
+        <Text className="text-text-secondary dark:text-text-dark-secondary text-sm">
+          {subtitle}
+        </Text>
       )}
     </View>
-    {value && <Text className="text-text-secondary mr-2">{value}</Text>}
-    <Ionicons name="chevron-forward" size={20} color="#666666" />
+    {value && (
+      <Text className="text-text-secondary dark:text-text-dark-secondary mr-2">
+        {value}
+      </Text>
+    )}
+    <Ionicons
+      name="chevron-forward"
+      size={20}
+      className="text-text-secondary dark:text-text-dark-secondary"
+    />
   </TouchableOpacity>
 );
 
 export default function Settings() {
   const dispatch = useAppDispatch();
+  const { theme } = useAppSelector((state) => state.settings);
   const { user } = useAppSelector((state) => state.auth);
   const { notes } = useAppSelector((state) => state.notes);
+
+  const handleThemeChange = useCallback(() => {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ["Cancel", "Light", "Dark", "System"],
+        cancelButtonIndex: 0,
+        title: "Choose Theme",
+      },
+      (buttonIndex) => {
+        switch (buttonIndex) {
+          case 1:
+            dispatch(setTheme("light"));
+            break;
+          case 2:
+            dispatch(setTheme("dark"));
+            break;
+          case 3:
+            dispatch(setTheme("system"));
+            break;
+        }
+      }
+    );
+  }, [dispatch]);
+
+  const getThemeLabel = (theme: ThemeType) => {
+    switch (theme) {
+      case "light":
+        return "Light";
+      case "dark":
+        return "Dark";
+      case "system":
+        return "System";
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
@@ -166,6 +230,15 @@ export default function Settings() {
           />
         </SettingsSection>
 
+        <SettingsSection title="Appearance">
+          <SettingsItem
+            icon="color-palette-outline"
+            title="Theme"
+            onPress={handleThemeChange}
+            subtitle={`Current: ${getThemeLabel(theme)}`}
+          />
+        </SettingsSection>
+
         <SettingsSection title="Data Management">
           <SettingsItem
             icon="trash-outline"
@@ -176,7 +249,7 @@ export default function Settings() {
           />
         </SettingsSection>
 
-        <SettingsSection title="Security" className="mt-4">
+        <SettingsSection title="Security">
           <SettingsItem
             icon="log-out-outline"
             title="Logout"

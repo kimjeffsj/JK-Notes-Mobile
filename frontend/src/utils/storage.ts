@@ -1,9 +1,11 @@
+import { ThemeType } from "@/shared/types/settings/settings";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const StorageKeys = {
   AUTH_TOKEN: "auth_token",
   REFRESH_TOKEN: "refresh_token",
   USER_DATA: "user_data",
+  SETTINGS: "settings",
 } as const;
 
 export const storage = {
@@ -86,12 +88,33 @@ export const storage = {
     }
   },
 
+  getSettings: async () => {
+    try {
+      const settings = await AsyncStorage.getItem(StorageKeys.SETTINGS);
+      return settings ? JSON.parse(settings) : null;
+    } catch (error) {
+      console.error("Error getting settings: ", error);
+    }
+  },
+
+  setSettings: async (settings: { theme: ThemeType }) => {
+    try {
+      await AsyncStorage.setItem(
+        StorageKeys.SETTINGS,
+        JSON.stringify(settings)
+      );
+    } catch (error) {
+      console.error("Error saving settings: ", error);
+    }
+  },
+
   clearAll: async () => {
     try {
       await AsyncStorage.multiRemove([
         StorageKeys.AUTH_TOKEN,
         StorageKeys.REFRESH_TOKEN,
         StorageKeys.USER_DATA,
+        StorageKeys.SETTINGS,
       ]);
     } catch (error) {
       console.error("Error clearing storage: ", error);
