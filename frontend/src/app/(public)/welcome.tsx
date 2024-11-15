@@ -25,8 +25,8 @@ export default function Welcome() {
         <Text className="text-4xl font-bold mb-4">Welcome to JK Notes!</Text>
 
         <Text className="text-gray-600 text-center mb-8">
-          Your personal not-taking companion! Organize your thoughts, ideas, and
-          memories in one place.
+          Your personal note-taking companion! Organize your thoughts, ideas,
+          and memories in one place.
         </Text>
 
         <View className="w-50 flex-row justify-between space-x-4 mx-8">

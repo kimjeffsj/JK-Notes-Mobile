@@ -31,7 +31,7 @@ export default function Login() {
     <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="bg-white">
       <View className="flex-1 justify-center px-6">
         <Text className="text-3xl font-bold mb-8 text-center">
-          Welcome Back!
+          Welcome to JK Notes
         </Text>
 
         <Input

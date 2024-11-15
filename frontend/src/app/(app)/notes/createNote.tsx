@@ -71,23 +71,25 @@ export default function CreateNote() {
   }, [title, content, checkChanges]);
 
   const saveNote = useCallback(
-    async (shouldNavigate: boolean = false) => {
-      if (!title.trim() && !content.trim()) {
-        if (shouldNavigate) {
-          router.back();
-        }
-        return;
-      }
+    async (isDonePressed: boolean = false) => {
+      const trimmedTitle = title.trim();
+      const trimmedContent = content.trim();
 
-      if (!checkChanges() && !shouldNavigate) {
-        return;
+      if (isDonePressed) {
+        if (!trimmedContent) {
+          Alert.alert("Empty Note", "Please write something before save.", [
+            { text: "OK" },
+          ]);
+          return;
+        }
+      } else {
+        if (!trimmedTitle && !trimmedContent) {
+          return;
+        }
       }
 
       try {
         setIsSaving(true);
-        const trimmedTitle = title.trim();
-        const trimmedContent = content.trim();
-
         let result;
         if (savedNoteId.current) {
           result = await dispatch(
@@ -120,18 +122,18 @@ export default function CreateNote() {
         setLastSaved(now);
         setHasChanges(false);
 
-        if (shouldNavigate && savedNoteId.current) {
+        if (isDonePressed && savedNoteId.current) {
           router.push(`/notes/view/${savedNoteId.current}`);
         }
       } catch (error) {
-        if (shouldNavigate) {
+        if (isDonePressed) {
           Alert.alert("Error", "Failed to save note");
         }
       } finally {
         setIsSaving(false);
       }
     },
-    [title, content, dispatch, checkChanges]
+    [title, content, dispatch]
   );
 
   useEffect(() => {

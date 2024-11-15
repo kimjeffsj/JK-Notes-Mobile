@@ -82,22 +82,29 @@ export default function EditNote() {
 
   // Saving note combined autoSave and done
   const saveNote = useCallback(
-    async (shouldNavigate: boolean = false) => {
-      if (!id || (!title.trim() && !content.trim())) {
-        if (shouldNavigate) {
-          router.replace("/(app)/dashboard");
+    async (isDonePressed: boolean = false) => {
+      const trimmedTitle = title.trim();
+      const trimmedContent = content.trim();
+
+      if (isDonePressed) {
+        if (!trimmedContent) {
+          Alert.alert("Empty Note", "Please write something before saving.", [
+            { text: "OK" },
+          ]);
+          return;
         }
-        return;
+      } else {
+        if (!trimmedTitle && !trimmedContent) {
+          return;
+        }
       }
 
-      if (!checkChanges() && !shouldNavigate) {
+      if (!checkChanges() && !isDonePressed) {
         return;
       }
 
       try {
         setIsSaving(true);
-        const trimmedTitle = title.trim();
-        const trimmedContent = title.trim();
 
         await dispatch(
           editNote({
@@ -116,13 +123,13 @@ export default function EditNote() {
         setLastSaved(new Date());
         setHasUnsaved(false);
 
-        if (shouldNavigate) {
+        if (isDonePressed) {
           router.push(`/notes/view/${id}`);
         }
       } catch (error) {
         Alert.alert(
           "Error",
-          shouldNavigate ? "Failed to save note" : "Auto-save Failed"
+          isDonePressed ? "Failed to save note" : "Auto-save Failed"
         );
       } finally {
         setIsSaving(false);
