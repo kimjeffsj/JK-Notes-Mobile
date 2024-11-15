@@ -87,6 +87,20 @@ export const deleteNote = createAsyncThunk(
   }
 );
 
+export const deleteAllNotes = createAsyncThunk(
+  "notes/deleteAll",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.delete("/notes/deleteAll");
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to delete all notes"
+      );
+    }
+  }
+);
+
 const noteSlice = createSlice({
   name: "notes",
   initialState,
@@ -193,6 +207,22 @@ const noteSlice = createSlice({
         state.notes = state.notes.filter((note) => note._id !== action.payload);
       })
       .addCase(deleteNote.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Delete All Notes
+      .addCase(deleteAllNotes.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteAllNotes.fulfilled, (state) => {
+        state.isLoading = false;
+        state.notes = [];
+        state.currentNote = null;
+        state.error = null;
+      })
+      .addCase(deleteAllNotes.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });
