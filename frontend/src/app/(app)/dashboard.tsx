@@ -4,6 +4,7 @@ import {
   Alert,
   FlatList,
   RefreshControl,
+  Text,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -192,36 +193,53 @@ export default function Dashboard() {
         </View>
       )}
 
-      <FlatList
-        data={filteredAndSortedNotes}
-        keyExtractor={(item) => item._id}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-        ItemSeparatorComponent={() => (
-          <View className="h-[1px] bg-border ml-4" />
-        )}
-        renderItem={({ item }) => (
-          <Swipeable
-            ref={(ref) => {
-              swipeableRefs.current[item._id] = ref;
-            }}
-            renderLeftActions={() => renderSwipeable("right")}
-            renderRightActions={() => renderSwipeable("left")}
-            onSwipeableOpen={(direction) =>
-              handleSwipeOpen(item._id, direction === "left" ? "right" : "left")
-            }
-            overshootLeft={false}
-            overshootRight={false}
-            friction={2}
-          >
-            <NoteListItem
-              note={item}
-              isPinned={pinnedNotes.includes(item._id)}
-            />
-          </Swipeable>
-        )}
-      />
+      {notes.length > 0 ? (
+        <FlatList
+          data={filteredAndSortedNotes}
+          keyExtractor={(item) => item._id}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
+          ItemSeparatorComponent={() => (
+            <View className="h-[1px] bg-border ml-4" />
+          )}
+          renderItem={({ item }) => (
+            <Swipeable
+              ref={(ref) => {
+                swipeableRefs.current[item._id] = ref;
+              }}
+              renderLeftActions={() => renderSwipeable("right")}
+              renderRightActions={() => renderSwipeable("left")}
+              onSwipeableOpen={(direction) =>
+                handleSwipeOpen(
+                  item._id,
+                  direction === "left" ? "right" : "left"
+                )
+              }
+              overshootLeft={false}
+              overshootRight={false}
+              friction={2}
+            >
+              <NoteListItem
+                note={item}
+                isPinned={pinnedNotes.includes(item._id)}
+              />
+            </Swipeable>
+          )}
+        />
+      ) : (
+        <View className="flex-1 justify-center items-center px-6">
+          <View className="w-16 h-16 bg-background-secondary rounded-full items-center justify-center mb-4">
+            <Ionicons name="document-text-outline" size={32} color="#dfa46d" />
+          </View>
+          <Text className="text-xl font-semibold text-primary mb-2">
+            Start Your First Note!
+          </Text>
+          <Text className="text-text-secondary text-center">
+            Tap the + button below to begin your journey of note-taking.
+          </Text>
+        </View>
+      )}
 
       <TouchableOpacity
         className="absolute bottom-6 right-6 w-14 h-14 bg-accent rounded-full items-center justify-center shadow-lg"

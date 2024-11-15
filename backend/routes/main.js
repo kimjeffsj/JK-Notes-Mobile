@@ -19,6 +19,7 @@ const {
   createNote,
   editNote,
   deleteNote,
+  deleteAllNotes,
 } = require("../controllers/noteController");
 
 // Auth
@@ -32,6 +33,7 @@ router.get("/notes", isAuth, getAllNotes);
 router.get("/notes/view/:_id", isAuth, getNote);
 router.post("/notes/create", isAuth, createNote);
 router.post("/notes/edit/:_id", isAuth, editNote);
+router.delete("/notes/deleteAll", isAuth, deleteAllNotes);
 router.delete("/notes/:_id", isAuth, deleteNote);
 
 // Profile

@@ -1,9 +1,10 @@
 import Header from "@/components/Header";
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
 import { logout } from "@/shared/store/slices/authSlice";
+import { deleteAllNotes } from "@/shared/store/slices/noteSlice";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React from "react";
+import React, { useCallback } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 interface SettingsSectionProps {
@@ -32,6 +33,7 @@ interface SettingsItemProps {
   showBorder?: boolean;
   textColor?: string;
   value?: string;
+  subtitle?: string;
 }
 
 const SettingsItem = ({
@@ -41,6 +43,7 @@ const SettingsItem = ({
   showBorder = true,
   textColor = "text-primary",
   value,
+  subtitle,
 }: SettingsItemProps) => (
   <TouchableOpacity
     onPress={onPress}
@@ -53,7 +56,12 @@ const SettingsItem = ({
       size={22}
       color={textColor === "text-primary" ? "1a1a1a" : "#FF3B30"}
     />
-    <Text className={`flex-1 ml-3 text-base ${textColor}`}>{title}</Text>
+    <View className="flex-1 ml-3">
+      <Text className={`text-base ${textColor}`}>{title}</Text>
+      {subtitle && (
+        <Text className="text-text-secondary text-sm">{subtitle}</Text>
+      )}
+    </View>
     {value && <Text className="text-text-secondary mr-2">{value}</Text>}
     <Ionicons name="chevron-forward" size={20} color="#666666" />
   </TouchableOpacity>
@@ -94,6 +102,36 @@ export default function Settings() {
     ]);
   };
 
+  const handleDeleteAllNotes = useCallback(() => {
+    if (notes.length === 0) {
+      Alert.alert("Info", "No notes to delete");
+      return;
+    }
+
+    Alert.alert(
+      "Delete All Notes",
+      `${notes.length} notes will be deleted. This cannot be undone`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete All",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await dispatch(deleteAllNotes()).unwrap();
+              Alert.alert("Success", "All notes have been deleted");
+            } catch (error) {
+              Alert.alert("Error", "Failed to delete notes");
+            }
+          },
+        },
+      ]
+    );
+  }, [dispatch, notes.length]);
+
   return (
     <View className="flex-1 bg-background">
       <Header title="Settings" />
@@ -126,12 +164,16 @@ export default function Settings() {
             title="Change Password"
             onPress={() => router.push("../(auth)/profile/password")}
           />
+        </SettingsSection>
 
-          {/* <SettingsItem
-            icon="notifications-outline"
-            title="Notifications"
-            onPress={() => router.push("/settings/notifications")}
-          /> */}
+        <SettingsSection title="Data Management">
+          <SettingsItem
+            icon="trash-outline"
+            title="Delete All Notes"
+            onPress={handleDeleteAllNotes}
+            textColor="text-red-500"
+            subtitle={notes.length > 0 ? `${notes.length} notes` : "No notes"}
+          />
         </SettingsSection>
 
         <SettingsSection title="Security" className="mt-4">
