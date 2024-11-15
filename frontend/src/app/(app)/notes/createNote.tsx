@@ -163,6 +163,7 @@ export default function CreateNote() {
         <Header
           showBack
           title="New Note"
+          onBackPress={() => router.push("/(app)/dashboard")}
           rightElement={
             <TouchableOpacity onPress={handleDone} className="px-4 py-2">
               <Text

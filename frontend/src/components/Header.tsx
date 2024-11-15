@@ -9,6 +9,7 @@ interface HeaderProps {
   title?: string;
   onSearchPress?: () => void;
   rightElement?: React.ReactNode;
+  onBackPress?: () => void;
 }
 
 export default function Header({
@@ -17,14 +18,23 @@ export default function Header({
   title = "Notes",
   onSearchPress,
   rightElement,
+  onBackPress,
 }: HeaderProps) {
+  const handleBackPress = () => {
+    if (onBackPress) {
+      onBackPress();
+    } else {
+      router.back();
+    }
+  };
+
   return (
     <SafeAreaView edges={["top"]} className="bg-background">
       <View className="flex-row justify-between items-center px-4 py-2 border-b border-border ">
         <View className="flex-row items-center">
           {showBack && (
             <TouchableOpacity
-              onPress={() => router.replace("/(app)/dashboard")}
+              onPress={handleBackPress}
               className="mr-2 p-2 -ml-2"
             >
               <Ionicons name="chevron-back" size={24} color="#1a1a1a" />

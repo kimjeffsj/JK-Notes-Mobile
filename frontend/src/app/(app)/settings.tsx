@@ -121,11 +121,11 @@ export default function Settings() {
             title="Edit Profile"
             onPress={() => router.push("../(auth)/profile/edit")}
           />
-          {/* <SettingsItem
+          <SettingsItem
             icon="key-outline"
             title="Change Password"
-            onPress={() => router.push("profile/password")}
-          /> */}
+            onPress={() => router.push("../(auth)/profile/password")}
+          />
 
           {/* <SettingsItem
             icon="notifications-outline"

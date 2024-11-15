@@ -160,6 +160,7 @@ export default function EditNote() {
       <KeyboardAvoidingView className="flex-1 bg-background">
         <Header
           showBack
+          onBackPress={() => router.push("/(app)/dashboard")}
           rightElement={
             <TouchableOpacity onPress={handleDone} className="px-4 py-2">
               <Text
