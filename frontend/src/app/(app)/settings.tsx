@@ -110,7 +110,6 @@ const SettingsItem = ({
 export default function Settings() {
   const dispatch = useAppDispatch();
   const { theme } = useAppSelector((state) => state.settings);
-  console.log("Current Theme:", theme);
   const { user } = useAppSelector((state) => state.auth);
   const { notes } = useAppSelector((state) => state.notes);
 
@@ -127,7 +126,6 @@ export default function Settings() {
         const themeOptions: ThemeType[] = ["light", "dark", "system"];
         const selectedTheme = themeOptions[buttonIndex - 1];
 
-        console.log("Selected theme:", selectedTheme);
         dispatch(setTheme(selectedTheme));
       }
     );

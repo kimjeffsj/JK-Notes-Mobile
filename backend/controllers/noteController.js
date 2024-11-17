@@ -1,7 +1,60 @@
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Note:
+ *       type: object
+ *       required:
+ *         - title
+ *         - content
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: Note ID
+ *         title:
+ *           type: string
+ *           description: Note title
+ *         content:
+ *           type: string
+ *           description: Note content
+ *         creator:
+ *           type: string
+ *           description: Note creator Id
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ */
+
 const Note = require("../models/noteSchema");
 
-// Get all notes
-// GET /notes
+/**
+ * @swagger
+ * /notes:
+ *   get:
+ *     summary: Get all notes
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Notes fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 notes:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Note'
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Failed to fetch notes
+ */
 const getAllNotes = async (req, res) => {
   try {
     const notes = await Note.find({ creator: req.user._id }).sort({
@@ -15,8 +68,33 @@ const getAllNotes = async (req, res) => {
   }
 };
 
-// Get a single note
-// GET /notes/:_id
+/**
+ * @swagger
+ * /notes/view/{_id}:
+ *   get:
+ *     summary: Get a note
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: _id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Note ID
+ *     responses:
+ *       200:
+ *         description: Note fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Note'
+ *       404:
+ *         description: Note not found
+ *       500:
+ *         description: Failed to fetch note
+ */
 const getNote = async (req, res) => {
   try {
     const note = await Note.findOne({
@@ -32,8 +110,38 @@ const getNote = async (req, res) => {
   }
 };
 
-// Create note
-// POST /create
+/**
+ * @swagger
+ * /notes/create:
+ *   post:
+ *     summary: Create a note
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - content
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Note title
+ *               content:
+ *                 type: string
+ *                 description: Note content
+ *     responses:
+ *       201:
+ *         description: Note created successfully
+ *       400:
+ *         description: Please fill in all fields
+ *       500:
+ *         description: Failed to create note
+ */
 const createNote = async (req, res) => {
   try {
     const { title, content } = req.body;
@@ -56,8 +164,55 @@ const createNote = async (req, res) => {
   }
 };
 
-// Edit note
-// POST /notes/:_id/edit
+/**
+ * @swagger
+ * /notes/edit/{_id}:
+ *   post:
+ *     summary: Edit a note
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: _id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Note ID to edit
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - content
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Updated note title
+ *               content:
+ *                 type: string
+ *                 description: Updated note content
+ *     responses:
+ *       200:
+ *         description: Note updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Note updated successfully
+ *                 updatedNote:
+ *                   $ref: '#/components/schemas/Note'
+ *       404:
+ *         description: Note not found or not authorized to edit
+ *       500:
+ *         description: Failed to update note
+ */
 const editNote = async (req, res) => {
   try {
     const { _id } = req.params;
@@ -83,8 +238,53 @@ const editNote = async (req, res) => {
   }
 };
 
-// Delete note
-// DELETE /notes/:_id
+/**
+ * @swagger
+ * /notes/{_id}:
+ *   delete:
+ *     summary: Delete a specific note
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: _id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Note ID to delete
+ *     responses:
+ *       200:
+ *         description: Note deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Note deleted successfully
+ *       404:
+ *         description: Note not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Note not found
+ *       500:
+ *         description: Failed to delete note
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Failed to delete note
+ */
 const deleteNote = async (req, res) => {
   try {
     const { _id } = req.params;
@@ -103,8 +303,42 @@ const deleteNote = async (req, res) => {
   }
 };
 
-// Delete All Notes
-// DELETE /notes/delete-all
+/**
+ * @swagger
+ * /notes/deleteAll:
+ *   delete:
+ *     summary: Delete all notes of authenticated user
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All notes deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: All notes deleted successfully
+ *                 deletedCount:
+ *                   type: number
+ *                   description: Number of notes deleted
+ *                   example: 5
+ *       500:
+ *         description: Failed to delete all notes
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Failed to delete all notes
+ *                 error:
+ *                   type: string
+ */
 const deleteAllNotes = async (req, res) => {
   try {
     const result = await Note.deleteMany({ creator: req.user._id });

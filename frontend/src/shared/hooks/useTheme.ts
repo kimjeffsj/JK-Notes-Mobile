@@ -10,7 +10,6 @@ export const useTheme = () => {
   }, [theme, systemTheme]);
 
   const currentTheme = useMemo((): ThemeType => {
-    console.log("Current theme state:", { theme, systemTheme });
     return theme === "system" ? systemTheme : theme;
   }, [theme, systemTheme]);
 

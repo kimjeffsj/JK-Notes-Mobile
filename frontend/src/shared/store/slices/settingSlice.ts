@@ -14,7 +14,6 @@ const settingsSlice = createSlice({
     setTheme: (state, action: PayloadAction<ThemeType>) => {
       const newTheme = action.payload;
       if (newTheme && ["light", "dark", "system"].includes(newTheme)) {
-        console.log("Setting theme in reducer:", newTheme);
         state.theme = newTheme;
 
         storage.setSettings({ theme: newTheme });

@@ -3,6 +3,9 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
 
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./swagger");
+
 const routes = require("./routes/main");
 const { notFound, globalErrorHandler } = require("./middleware/errorHandler");
 
@@ -32,6 +35,9 @@ app.use(
 
 // Routes
 app.use("/", routes);
+
+// Swagger UI
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Error handlers
 app.use(notFound);
