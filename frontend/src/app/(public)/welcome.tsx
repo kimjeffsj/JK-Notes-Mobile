@@ -18,13 +18,15 @@ export default function Welcome() {
   return (
     <ScrollView
       ref={scrollViewRef}
-      className="flex-1 bg-white"
+      className="flex-1 bg-background dark:bg-background-dark"
       showsVerticalScrollIndicator={false}
     >
       <View className="h-screen justify-center items-center px-6">
-        <Text className="text-4xl font-bold mb-4">Welcome to JK Notes!</Text>
+        <Text className="text-4xl font-bold mb-4 text-primary dark:text-primary-dark">
+          Welcome to JK Notes!
+        </Text>
 
-        <Text className="text-gray-600 text-center mb-8">
+        <Text className="text-text-secondary dark:text-text-dark-secondary text-center mb-8">
           Your personal note-taking companion! Organize your thoughts, ideas,
           and memories in one place.
         </Text>
@@ -37,15 +39,21 @@ export default function Welcome() {
             />
           </View>
           <View className="flex-1 mx-3">
-            <Button title="Learn More" onPress={scrollToFeatures} />
+            <Button
+              title="Learn More"
+              variant="secondary"
+              onPress={scrollToFeatures}
+            />
           </View>
         </View>
       </View>
 
       <View className="min-h-screen px-6 pt-12">
-        <Text className="text-3xl font-bold mb-4">Why JK Notes?</Text>
+        <Text className="text-3xl font-bold mb-4 text-primary dark:text-primary-dark">
+          Why JK Notes?
+        </Text>
 
-        <View className="space-y-4 ">
+        <View className="space-y-4">
           <Feature
             title="Simple & Intuitive"
             description="Easy to use interface for quick note-taking"
@@ -66,7 +74,6 @@ export default function Welcome() {
             title="Sync Everywhere"
             description="Access your notes across all your devices seamlessly"
           />
-
           <Feature
             title="Offline Access"
             description="Create and edit notes anytime, even without internet"
@@ -78,7 +85,7 @@ export default function Welcome() {
         </View>
 
         <View className="mt-12 mb-16 items-center">
-          <Text className="text-2xl font-semibold mb-6 text-center">
+          <Text className="text-2xl font-semibold mb-6 text-center text-primary dark:text-primary-dark">
             Ready to get started?
           </Text>
           <View className="w-full space-y-2">

@@ -1,7 +1,12 @@
-import { forwardRef } from "react";
-import { ActivityIndicator, Text, TouchableOpacity } from "react-native";
+import { ComponentRef, forwardRef } from "react";
+import {
+  ActivityIndicator,
+  Text,
+  TouchableOpacity,
+  TouchableOpacityProps,
+} from "react-native";
 
-interface ButtonProps {
+interface ButtonProps extends TouchableOpacityProps {
   onPress?: () => void;
   title: string;
   variant?: "primary" | "secondary" | "danger";
@@ -10,7 +15,7 @@ interface ButtonProps {
   className?: string;
 }
 
-const Button = forwardRef<TouchableOpacity, ButtonProps>(
+const Button = forwardRef<ComponentRef<typeof TouchableOpacity>, ButtonProps>(
   (
     {
       onPress,
@@ -19,20 +24,22 @@ const Button = forwardRef<TouchableOpacity, ButtonProps>(
       isLoading = false,
       disabled = false,
       className = "",
+      ...props
     },
     ref
   ) => {
     const baseStyles = "h-12 rounded-lg justify-center items-center";
     const variantStyles = {
-      primary: "bg-primary active:bg-primary-light",
+      primary: "bg-primary dark:bg-primary-dark active:bg-primary-light",
       secondary:
-        "bg-background-secondary active:bg-background border border-primary",
-      danger: "bg-red-500 active:bg-red-600",
+        "bg-background-secondary dark:bg-background-dark-secondary border border-primary dark:border-primary-dark",
+      danger:
+        "bg-red-500 dark:bg-red-600 active:bg-red-600 dark:active:bg-red-700",
     };
 
     const textStyles = {
-      primary: "text-white",
-      secondary: "text-primary",
+      primary: "text-white dark:text-primary",
+      secondary: "text-primary dark:text-primary-dark",
       danger: "text-white",
     };
 
@@ -40,6 +47,7 @@ const Button = forwardRef<TouchableOpacity, ButtonProps>(
 
     return (
       <TouchableOpacity
+        {...props}
         ref={ref}
         className={`${baseStyles} ${variantStyles[variant]} ${disabledStyles} ${className} mt-2`}
         onPress={onPress}
@@ -47,7 +55,7 @@ const Button = forwardRef<TouchableOpacity, ButtonProps>(
       >
         {isLoading ? (
           <ActivityIndicator
-            color={variant === "secondary" ? "1a1a1a" : "white"}
+            color={variant === "secondary" ? "#1a1a1a" : "white"}
           />
         ) : (
           <Text className={`font-semibold text-lg ${textStyles[variant]}`}>

@@ -28,10 +28,13 @@ export default function Login() {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="bg-white">
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1 }}
+      className="bg-background dark:bg-background-dark"
+    >
       <View className="flex-1 justify-center px-6">
-        <Text className="text-3xl font-bold mb-8 text-center">
-          Welcome to JK Notes
+        <Text className="text-3xl font-bold mb-8 text-center text-primary dark:text-primary-dark">
+          Welcome Back
         </Text>
 
         <Input
@@ -57,7 +60,7 @@ export default function Login() {
           onPress={() => router.push("/(auth)/register")}
           className="mt-4"
         >
-          <Text className="text-center text-blue-500">
+          <Text className="text-center text-accent dark:text-accent">
             Don't have an account? Sign up
           </Text>
         </TouchableOpacity>

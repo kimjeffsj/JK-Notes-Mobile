@@ -15,8 +15,11 @@ import {
 import Header from "@/components/Header";
 import { useAppDispatch } from "@/shared/hooks/useRedux";
 import { createNote, editNote } from "@/shared/store/slices/noteSlice";
+import { useTheme } from "@/shared/hooks/useTheme";
 
 export default function CreateNote() {
+  const { isDark } = useTheme();
+
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -161,7 +164,7 @@ export default function CreateNote() {
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <KeyboardAvoidingView className="flex-1 bg-background">
+      <KeyboardAvoidingView className="flex-1 bg-background dark:bg-background-dark">
         <Header
           showBack
           title="New Note"
@@ -170,7 +173,9 @@ export default function CreateNote() {
             <TouchableOpacity onPress={handleDone} className="px-4 py-2">
               <Text
                 className={`text-base text-right font-medium ${
-                  hasChanges ? "text-primary" : "text-gray-300"
+                  hasChanges
+                    ? "text-primary dark:text-primary-dark"
+                    : "text-gray-300 dark:text-gray-600"
                 }`}
               >
                 {isSaving ? "Saving..." : "Done"}
@@ -187,10 +192,10 @@ export default function CreateNote() {
           <View className="px-4">
             {lastSaved && (
               <View className="flex-row justify-end items-center mt-2 mb-2">
-                <Text className="text-text-secondary text-sm mr-1">
+                <Text className="text-text-secondary dark:text-text-dark-secondary text-sm mr-1">
                   {savedNoteId.current ? "Last saved:" : "Draft saved:"}
                 </Text>
-                <Text className="text-text-secondary text-sm">
+                <Text className="text-text-secondary dark:text-text-dark-secondary text-sm">
                   {formatLastSaved(lastSaved)}
                 </Text>
                 {hasChanges && (
@@ -202,22 +207,22 @@ export default function CreateNote() {
             )}
 
             <TextInput
-              className="text-xl font-semibold text-primary py-4 border-b border-border"
+              className="text-xl font-semibold text-primary dark:text-primary-dark py-4 border-b border-border dark:border-border-dark"
               placeholder="Title"
               value={title}
               onChangeText={(text) => handleTextChange(text, true)}
-              placeholderTextColor="#999"
+              placeholderTextColor={isDark ? "#666666" : "#999999"}
               autoFocus
             />
 
             <TextInput
-              className="flex-1 text-base text-primary py-4"
+              className="flex-1 text-base text-primary dark:text-primary-dark py-4"
               placeholder="Start writing here"
               value={content}
               onChangeText={(text) => handleTextChange(text, false)}
               multiline
               textAlignVertical="top"
-              placeholderTextColor="#999"
+              placeholderTextColor={isDark ? "#666666" : "#999999"}
               scrollEnabled={false}
             />
           </View>

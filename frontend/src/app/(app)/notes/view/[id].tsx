@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Loading from "@/components/Loading";
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
+import { useTheme } from "@/shared/hooks/useTheme";
 import { deleteNote } from "@/shared/store/slices/noteSlice";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -17,6 +18,8 @@ import {
 export default function NoteDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const dispatch = useAppDispatch();
+  const { isDark } = useTheme();
+
   const note = useAppSelector((state) =>
     state.notes.notes.find((note) => note._id === id)
   );
@@ -81,7 +84,7 @@ export default function NoteDetail() {
   }
 
   return (
-    <KeyboardAvoidingView className="flex-1 bg-background">
+    <KeyboardAvoidingView className="flex-1 bg-background dark:bg-background-dark">
       <Header
         showBack
         title={note.title}
@@ -89,7 +92,11 @@ export default function NoteDetail() {
         rightElement={
           <View className="flex-row items-center">
             <TouchableOpacity className="p-2" onPress={handleEdit}>
-              <Ionicons name="create-outline" size={22} color="#1a1a1a" />
+              <Ionicons
+                name="create-outline"
+                size={22}
+                color={isDark ? "#ffffff" : "#1a1a1a"}
+              />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleDelete} className="p-2">
               <Ionicons name="trash-outline" size={22} color="#FF3B30" />
@@ -99,14 +106,16 @@ export default function NoteDetail() {
       />
 
       <ScrollView className="flex-1 p-4">
-        <View className="py-4 border-b border-border">
-          <Text className="text-2xl font-bold text-primary">{note.title}</Text>
-          <Text className="text-text-secondary text-sm mt-1">
+        <View className="py-4 border-b border-border dark:border-border-dark">
+          <Text className="text-2xl font-bold text-primary dark:text-primary-dark">
+            {note.title}
+          </Text>
+          <Text className="text-text-secondary dark:text-text-dark-secondary text-sm mt-1">
             Last Updated: {formattedDate}
           </Text>
         </View>
         <View className="py-4">
-          <Text className="text-primary text-base leading-6">
+          <Text className="text-primary dark:text-primary-dark text-base leading-6">
             {note.content}
           </Text>
         </View>

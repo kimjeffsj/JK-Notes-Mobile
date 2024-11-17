@@ -15,10 +15,12 @@ import { router, useLocalSearchParams } from "expo-router";
 import Header from "@/components/Header";
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
 import { editNote } from "@/shared/store/slices/noteSlice";
+import { useTheme } from "@/shared/hooks/useTheme";
 
 export default function EditNote() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const dispatch = useAppDispatch();
+  const { isDark } = useTheme();
 
   const note = useAppSelector((state) =>
     state.notes.notes.find((note) => note._id === id)
@@ -164,7 +166,7 @@ export default function EditNote() {
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <KeyboardAvoidingView className="flex-1 bg-background">
+      <KeyboardAvoidingView className="flex-1 bg-background dark:bg-background-dark">
         <Header
           showBack
           onBackPress={() => router.push("/(app)/dashboard")}
@@ -172,7 +174,9 @@ export default function EditNote() {
             <TouchableOpacity onPress={handleDone} className="px-4 py-2">
               <Text
                 className={`text-base text-right font-medium ${
-                  hasUnsaved ? "text-primary" : "text-gray-300"
+                  hasUnsaved
+                    ? "text-primary dark:text-primary-dark"
+                    : "text-gray-300 dark:text-gray-600"
                 }`}
               >
                 {isSaving ? "Saving..." : "Done"}
@@ -189,10 +193,10 @@ export default function EditNote() {
           <View className="px-4">
             {lastSaved && (
               <View className="flex-row justify-end items-center mt-2 mb-2">
-                <Text className="text-text-secondary text-sm mr-1">
+                <Text className="text-text-secondary dark:text-text-dark-secondary text-sm mr-1">
                   Last saved:
                 </Text>
-                <Text className="text-text-secondary text-sm">
+                <Text className="text-text-secondary dark:text-text-dark-secondary text-sm">
                   {formatLastSaved(lastSaved)}
                 </Text>
                 {hasUnsaved && (
@@ -204,21 +208,21 @@ export default function EditNote() {
             )}
 
             <TextInput
-              className="text-xl font-semibold text-primary py-4 border-b border-border"
+              className="text-xl font-semibold text-primary dark:text-primary-dark py-4 border-b border-border dark:border-border-dark"
               placeholder="Title"
               value={title === "Untitled Note" ? "" : title}
               onChangeText={(text) => handleTextChange(text, true)}
-              placeholderTextColor="#999"
+              placeholderTextColor={isDark ? "#666666" : "#999999"}
             />
 
             <TextInput
-              className="flex-1 text-base text-primary py-4"
+              className="flex-1 text-base text-primary dark:text-primary-dark py-4"
               placeholder="Start writing here"
               value={content}
               onChangeText={(text) => handleTextChange(text, false)}
               multiline
               textAlignVertical="top"
-              placeholderTextColor="#999"
+              placeholderTextColor={isDark ? "#666666" : "#999999"}
               scrollEnabled={false}
             />
           </View>

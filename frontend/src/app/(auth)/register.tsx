@@ -40,9 +40,12 @@ export default function Register() {
   };
 
   return (
-    <ScrollView className="bg-white" contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView
+      className="bg-background dark:bg-background-dark"
+      contentContainerStyle={{ flexGrow: 1 }}
+    >
       <View className="flex-1 justify-center px-6">
-        <Text className="text-3xl font-bold mb-8 text-center">
+        <Text className="text-3xl font-bold mb-8 text-center text-primary dark:text-primary-dark">
           Create Account
         </Text>
 
@@ -51,6 +54,7 @@ export default function Register() {
           value={name}
           onChangeText={setName}
           placeholder="Enter your name"
+          containerClassName="mb-4"
         />
 
         <Input
@@ -61,20 +65,25 @@ export default function Register() {
           autoCapitalize="none"
           placeholder="Enter your email"
           error={error}
+          containerClassName="mb-4"
         />
+
         <Input
           label="Password"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
           placeholder="Enter your password"
+          containerClassName="mb-4"
         />
+
         <Input
           label="Confirm Password"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           secureTextEntry
           placeholder="Confirm your password"
+          containerClassName="mb-6"
         />
 
         <Button
@@ -87,7 +96,7 @@ export default function Register() {
           onPress={() => router.push("/(auth)/login")}
           className="mt-4"
         >
-          <Text className="text-center text-blue-500">
+          <Text className="text-center text-accent dark:text-accent">
             Already have an account? Sign in
           </Text>
         </TouchableOpacity>
