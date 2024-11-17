@@ -1,6 +1,6 @@
 # JK Notes Mobile
 
-JK Notes Mobile is based on JK Notes Web, used ejs and node.js to build, that transfer toa mobile note-taking application built with React Native and Express.js.
+JK Notes Mobile is based on JK Notes Web, used ejs and node.js to build, that transfer to mobile note-taking application built with React Native and Express.js.
 
 ## Key Features
 
@@ -14,7 +14,7 @@ JK Notes Mobile is based on JK Notes Web, used ejs and node.js to build, that tr
 
 ### Frontend
 
-- React Native / Expo
+- React Native / Expo    (evolved from EJS in the web version)
 - TypeScript
 - Redux Toolkit
 - NativeWind (Tailwind CSS)
@@ -22,7 +22,7 @@ JK Notes Mobile is based on JK Notes Web, used ejs and node.js to build, that tr
 
 ### Backend
 
-- Node.js / Express.js
+- Node.js / Express.js    (enhanced and optimized from the original web version)
 - MongoDB / Mongoose
 - JWT Authentication
 - Bcrypt
