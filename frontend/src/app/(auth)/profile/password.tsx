@@ -2,14 +2,16 @@ import Button from "@/components/Button";
 import Header from "@/components/Header";
 import Input from "@/components/Input";
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
+import { useTheme } from "@/shared/hooks/useTheme";
 import { updateProfile } from "@/shared/store/slices/authSlice";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, View } from "react-native";
+import { Alert, ScrollView, Text, View } from "react-native";
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
 
 export default function ChangePassword() {
+  const { isDark } = useTheme();
   const dispatch = useAppDispatch();
   const { isLoading } = useAppSelector((state) => state.auth);
 
@@ -130,7 +132,7 @@ export default function ChangePassword() {
   }, []);
 
   return (
-    <View className="flex-1 bg-background">
+    <View className="flex-1 bg-background dark:bg-background-dark">
       <Header
         showBack
         title="Change Password"
@@ -141,7 +143,7 @@ export default function ChangePassword() {
         contentContainerStyle={{ paddingTop: 16 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="bg-background-secondary rounded-lg p-4 mb-4">
+        <View className="bg-background-secondary dark:bg-background-dark-secondary rounded-lg p-4 mb-4">
           <Input
             label="Current Password"
             value={currentPassword}
@@ -149,7 +151,7 @@ export default function ChangePassword() {
             placeholder="Enter your current password"
             secureTextEntry
             containerClassName="mb-4"
-            inputClassName="bg-background"
+            inputClassName="bg-background dark:bg-background-dark"
             error={currentPasswordError}
             autoCapitalize="none"
           />
@@ -161,7 +163,7 @@ export default function ChangePassword() {
             placeholder="Enter your new password"
             secureTextEntry
             containerClassName="mb-4"
-            inputClassName="bg-background"
+            inputClassName="bg-background dark:bg-background-dark"
             error={newPasswordError}
             autoCapitalize="none"
           />
@@ -173,7 +175,7 @@ export default function ChangePassword() {
             placeholder="Confirm your new password"
             secureTextEntry
             containerClassName="mb-0"
-            inputClassName="bg-background"
+            inputClassName="bg-background dark:bg-background-dark"
             error={confirmPasswordError}
             autoCapitalize="none"
           />
@@ -191,6 +193,29 @@ export default function ChangePassword() {
                 : "secondary"
             }
           />
+        </View>
+        {/* Password Requirements Guide */}
+        <View className="px-4 pb-6">
+          <View className="bg-background-secondary dark:bg-background-dark-secondary rounded-lg p-4">
+            <Text className="text-sm font-medium text-primary dark:text-primary-dark mb-2">
+              Password Requirements:
+            </Text>
+            <View className="space-y-1">
+              {[
+                "At least 6 characters long",
+                "Include at least one uppercase letter",
+                "Include at least one lowercase letter",
+                "Include at least one number",
+              ].map((requirement, index) => (
+                <Text
+                  key={index}
+                  className="text-sm text-text-secondary dark:text-text-dark-secondary"
+                >
+                  • {requirement}
+                </Text>
+              ))}
+            </View>
+          </View>
         </View>
       </ScrollView>
     </View>

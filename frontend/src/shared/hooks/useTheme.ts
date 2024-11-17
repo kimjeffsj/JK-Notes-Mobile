@@ -5,15 +5,14 @@ import type { ThemeType } from "@/shared/types/settings/settings";
 export const useTheme = () => {
   const { theme, systemTheme } = useAppSelector((state) => state.settings);
 
-  const currentTheme = useMemo((): ThemeType => {
-    if (theme === "system") {
-      return systemTheme;
-    }
-    return theme;
+  const isDark = useMemo(() => {
+    return theme === "dark" || (theme === "system" && systemTheme === "dark");
   }, [theme, systemTheme]);
 
-  return {
-    currentTheme,
-    theme,
-  };
+  const currentTheme = useMemo((): ThemeType => {
+    console.log("Current theme state:", { theme, systemTheme });
+    return theme === "system" ? systemTheme : theme;
+  }, [theme, systemTheme]);
+
+  return { isDark, currentTheme, theme, systemTheme };
 };

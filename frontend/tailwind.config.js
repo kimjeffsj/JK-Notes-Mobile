@@ -24,12 +24,12 @@ module.exports = {
           dark: "#ffffff",
           "dark-secondary": "#a0a0a0",
         },
-        border: { DEFAULT: "#e2e2e2", dark: "#3a3a3a" },
+        border: {
+          DEFAULT: "#e2e2e2",
+          dark: "#3a3a3a",
+        },
       },
     },
-  },
-  future: {
-    hoverOnlyWhenSupported: true,
   },
   plugins: [],
 };

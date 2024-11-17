@@ -1,3 +1,4 @@
+import { useTheme } from "@/shared/hooks/useTheme";
 import { Text, TextInput, TextInputProps, View } from "react-native";
 
 interface InputProps extends TextInputProps {
@@ -14,18 +15,31 @@ const Input = ({
   inputClassName = "",
   ...props
 }: InputProps) => {
-  const baseInput = "w-full border rounded-lg px-4 py-2 bg-background";
-  const errorStyle = error ? "border-red-500" : "border-border";
+  const { isDark } = useTheme();
 
   return (
-    <View className={`${containerClassName}`}>
-      {label && <Text className="text-text mb-2 font-medium">{label}</Text>}
+    <View className={`mb-4 ${containerClassName}`}>
+      {label && (
+        <Text className="text-text dark:text-text-dark mb-2 font-medium">
+          {label}
+        </Text>
+      )}
       <TextInput
-        className={`${baseInput} ${errorStyle} ${inputClassName}`}
-        placeholderTextColor="#9CA3AF"
+        className={`w-full border rounded-lg px-4 py-2.5
+          bg-background dark:bg-background-dark
+          text-primary dark:text-primary-dark
+          border-border dark:border-border-dark
+          placeholder:text-text-secondary dark:placeholder:text-text-dark-secondary
+          ${error ? "border-red-500" : ""}
+          ${inputClassName}`}
+        placeholderTextColor={isDark ? "#666666" : "#9CA3AF"}
         {...props}
       />
-      {error && <Text className="text-red-500 text-sm mt-1">{error}</Text>}
+      {error && (
+        <Text className="text-red-500 dark:text-red-400 text-sm mt-1">
+          {error}
+        </Text>
+      )}
     </View>
   );
 };

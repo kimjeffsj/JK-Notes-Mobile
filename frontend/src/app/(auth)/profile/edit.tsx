@@ -7,11 +7,13 @@ import Header from "@/components/Header";
 import Input from "@/components/Input";
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
 import { updateProfile } from "@/shared/store/slices/authSlice";
+import { useTheme } from "@/shared/hooks/useTheme";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_NAME_LENGTH = 50;
 
 export default function EditProfile() {
+  const { isDark } = useTheme();
   const dispatch = useAppDispatch();
   const { user, isLoading } = useAppSelector((state) => state.auth);
 
@@ -105,7 +107,7 @@ export default function EditProfile() {
   }, []);
 
   return (
-    <View className="flex-1 bg-background">
+    <View className="flex-1 bg-background dark:bg-background-dark">
       <Header
         showBack
         title="Edit Profile"
@@ -116,7 +118,7 @@ export default function EditProfile() {
         contentContainerStyle={{ paddingTop: 16 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="bg-background-secondary rounded-lg p-4 mb-4">
+        <View className="bg-background-secondary dark:bg-background-dark-secondary rounded-lg p-4 mb-4">
           <View className="w-20 h-20 bg-accent rounded-full self-center mb-4 items-center justify-center">
             <Text className="text-white text-2xl font-bold">
               {user?.name.charAt(0).toUpperCase()}
@@ -130,7 +132,7 @@ export default function EditProfile() {
             placeholder="Enter your name"
             autoCapitalize="words"
             containerClassName="mb-4"
-            inputClassName="bg-background"
+            inputClassName="bg-background dark:bg-background-dark"
             error={nameError}
             maxLength={MAX_NAME_LENGTH}
           />
@@ -143,7 +145,7 @@ export default function EditProfile() {
             keyboardType="email-address"
             autoCapitalize="none"
             containerClassName="mb-4"
-            inputClassName="bg-background"
+            inputClassName="bg-background dark:bg-background-dark"
             error={emailError}
           />
 
@@ -154,7 +156,7 @@ export default function EditProfile() {
             placeholder="Enter your current password"
             secureTextEntry
             containerClassName="mb-0"
-            inputClassName="bg-background"
+            inputClassName="bg-background dark:bg-background-dark"
           />
         </View>
 

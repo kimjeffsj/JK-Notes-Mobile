@@ -93,7 +93,8 @@ export const storage = {
       const settings = await AsyncStorage.getItem(StorageKeys.SETTINGS);
       return settings ? JSON.parse(settings) : null;
     } catch (error) {
-      console.error("Error getting settings: ", error);
+      console.error("Error getting settings:", error);
+      return null;
     }
   },
 
@@ -104,7 +105,7 @@ export const storage = {
         JSON.stringify(settings)
       );
     } catch (error) {
-      console.error("Error saving settings: ", error);
+      console.error("Error saving settings:", error);
     }
   },
 

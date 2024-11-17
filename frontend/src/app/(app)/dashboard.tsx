@@ -18,10 +18,13 @@ import Input from "@/components/Input";
 import { Ionicons } from "@expo/vector-icons";
 import Header from "@/components/Header";
 import NoteListItem from "@/components/NoteListItem";
+import { useTheme } from "@/shared/hooks/useTheme";
 
 type SortOption = "updated" | "created" | "title";
 
 export default function Dashboard() {
+  const { isDark } = useTheme();
+
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchVis, setIsSearchVis] = useState(false);
@@ -168,26 +171,30 @@ export default function Dashboard() {
   }
 
   return (
-    <View className="flex-1 bg-background">
+    <View className="flex-1 bg-background dark:bg-background-dark">
       <Header
         title="Notes"
         showSearch
         onSearchPress={() => setIsSearchVis(!isSearchVis)}
         rightElement={
           <TouchableOpacity onPress={handleSort} className="p-2">
-            <Ionicons name="filter-outline" size={22} color="#1a1a1a" />
+            <Ionicons
+              name="filter-outline"
+              size={22}
+              color={isDark ? "#ffffff" : "#1a1a1a"}
+            />
           </TouchableOpacity>
         }
       />
 
       {isSearchVis && (
-        <View>
+        <View className="px-4 py-2">
           <Input
             placeholder="Search notes..."
             value={searchQuery}
             onChangeText={setSearchQuery}
             containerClassName="mb-0"
-            inputClassName="bg-background-secondary"
+            inputClassName="bg-background-secondary dark:bg-background-dark-secondary"
             autoFocus
           />
         </View>
@@ -229,13 +236,17 @@ export default function Dashboard() {
         />
       ) : (
         <View className="flex-1 justify-center items-center px-6">
-          <View className="w-16 h-16 bg-background-secondary rounded-full items-center justify-center mb-4">
-            <Ionicons name="document-text-outline" size={32} color="#dfa46d" />
+          <View className="w-16 h-16 bg-background-secondary dark:bg-background-dark-secondary rounded-full items-center justify-center mb-4">
+            <Ionicons
+              name="document-text-outline"
+              size={32}
+              color={isDark ? "#ffffff" : "#dfa46d"}
+            />
           </View>
-          <Text className="text-xl font-semibold text-primary mb-2">
+          <Text className="text-xl font-semibold text-primary dark:text-primary-dark mb-2">
             Start Your First Note!
           </Text>
-          <Text className="text-text-secondary text-center">
+          <Text className="text-text-secondary dark:text-text-dark-secondary text-center">
             Tap the + button below to begin your journey of note-taking.
           </Text>
         </View>

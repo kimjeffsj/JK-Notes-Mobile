@@ -9,16 +9,17 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { store } from "@/shared/store";
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
 import { checkAuth } from "@/shared/store/slices/authSlice";
-import { useTheme } from "@/shared/hooks/useTheme";
+
 import { Appearance, View } from "react-native";
 import { setSystemTheme } from "@/shared/store/slices/settingSlice";
+import { storage } from "@/utils/storage";
+import { ThemeProvider } from "@/provider/ThemeProvider";
 
 SplashScreen.preventAutoHideAsync();
 
 function RootNav() {
   const dispatch = useAppDispatch();
   const { isLoading } = useAppSelector((state) => state.auth);
-  const { currentTheme } = useTheme();
 
   useEffect(() => {
     const themeListener = Appearance.addChangeListener(({ colorScheme }) => {
@@ -29,13 +30,11 @@ function RootNav() {
       setSystemTheme(Appearance.getColorScheme() === "dark" ? "dark" : "light")
     );
 
+    dispatch(checkAuth());
+
     return () => {
       themeListener.remove();
     };
-  }, [dispatch]);
-
-  useEffect(() => {
-    dispatch(checkAuth());
   }, [dispatch]);
 
   useEffect(() => {
@@ -44,11 +43,13 @@ function RootNav() {
     }
   }, [isLoading]);
 
-  if (isLoading) {
-    return null;
-  }
+  if (isLoading) return null;
 
-  return <Slot />;
+  return (
+    <View className="flex-1 bg-background dark:bg-background-dark">
+      <Slot />
+    </View>
+  );
 }
 
 export default function RootLayout() {
@@ -56,7 +57,9 @@ export default function RootLayout() {
     <Provider store={store}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaProvider>
-          <RootNav />
+          <ThemeProvider>
+            <RootNav />
+          </ThemeProvider>
         </SafeAreaProvider>
       </GestureHandlerRootView>
     </Provider>
