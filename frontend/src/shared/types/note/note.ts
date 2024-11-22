@@ -2,6 +2,7 @@ export interface Note {
   _id: string;
   title: string;
   content: string;
+  plainContent?: string;
   creator: string;
   createdAt: string;
   updatedAt: string;

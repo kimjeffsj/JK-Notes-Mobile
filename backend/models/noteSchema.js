@@ -8,6 +8,13 @@ const noteSchema = new mongoose.Schema({
   content: {
     type: String,
     required: true,
+    set: function (content) {
+      this.plainContent = content.replace(/<[^>]+>/g, "");
+      return content;
+    },
+  },
+  plainContent: {
+    type: String,
   },
   creator: {
     type: mongoose.Schema.Types.ObjectId,
@@ -21,6 +28,14 @@ const noteSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+});
+
+noteSchema.pre("save", function (next) {
+  if (this.isModified("content")) {
+    // Simple HTML to text conversion
+    this.plainContent = this.content.replace(/<[^>]*>/g, "");
+  }
+  next();
 });
 
 module.exports = mongoose.model("Note", noteSchema);

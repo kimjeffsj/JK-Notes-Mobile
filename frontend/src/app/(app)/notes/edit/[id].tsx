@@ -3,28 +3,57 @@ import {
   Alert,
   Keyboard,
   KeyboardAvoidingView,
-  ScrollView,
+  Platform,
   Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { debounce } from "lodash";
 import { router, useLocalSearchParams } from "expo-router";
 
 import Header from "@/components/Header";
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
 import { editNote } from "@/shared/store/slices/noteSlice";
 import { useTheme } from "@/shared/hooks/useTheme";
+import RichTextEditor from "@/components/RichEditor";
 
 export default function EditNote() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const dispatch = useAppDispatch();
   const { isDark } = useTheme();
 
+  // Fetching current note
   const note = useAppSelector((state) =>
     state.notes.notes.find((note) => note._id === id)
   );
+
+  // Resetting Editor
+  useEffect(() => {
+    if (note) {
+      setTitle(note.title);
+      setContent(note.content);
+      setLastSaved(new Date(note.updatedAt));
+      lastSavedContent.current = {
+        title: note.title,
+        content: note.content,
+      };
+    }
+  }, [note]);
+
+  useEffect(() => {
+    setEditorKey((prev) => prev + 1);
+    return () => {
+      setContent("");
+    };
+  }, []);
+
+  // ref for tracking last saved note
+  const lastSavedContent = useRef({
+    title: note?.title || "",
+    content: note?.content || "",
+  });
 
   const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
@@ -33,13 +62,10 @@ export default function EditNote() {
     note ? new Date(note.updatedAt) : null
   );
   const [hasUnsaved, setHasUnsaved] = useState(false);
+  const [editorKey, setEditorKey] = useState(0);
 
-  // ref for tracking last saved note
-  const lastSavedContent = useRef({
-    title: note?.title || "",
-    content: note?.content || "",
-  });
-
+  // Callback functions
+  // Checking changes
   const checkChanges = useCallback(() => {
     const currentTitle = title.trim();
     const currentContent = content.trim();
@@ -52,18 +78,23 @@ export default function EditNote() {
     return hasChanges;
   }, [title, content]);
 
-  useEffect(() => {
-    checkChanges();
-  }, [title, content, checkChanges]);
+  // Rendering Editor
+  const renderEditor = () => {
+    if (!note || !content) return null;
 
-  useEffect(() => {
-    if (!note) {
-      Alert.alert("Error", "Note not found");
-      router.replace("/(app)/dashboard");
-    }
-  }, [note]);
+    return (
+      <View style={{ flex: 1 }}>
+        <RichTextEditor
+          key={editorKey}
+          initialContent={content}
+          onChangeContent={handleContentChange}
+          editorHeight={Platform.OS === "ios" ? 300 : 250}
+        />
+      </View>
+    );
+  };
 
-  // User Friendly formatted date
+  // Formatting Saved time
   const formatLastSaved = useCallback((date: Date) => {
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -82,8 +113,45 @@ export default function EditNote() {
     return date.toLocaleString();
   }, []);
 
-  // Saving note combined autoSave and done
-  const saveNote = useCallback(
+  // Debounced Saving
+  const debouncedSave = useCallback(
+    debounce(async (currentTitle: string, currentContent: string) => {
+      if (!id || !currentContent.trim()) return; // Check if content is empty
+
+      try {
+        if (!checkChanges()) return;
+        setIsSaving(true);
+
+        await dispatch(
+          editNote({
+            id,
+            data: {
+              title: currentTitle || "Untitled Note",
+              content: currentContent,
+            },
+          })
+        ).unwrap();
+
+        lastSavedContent.current = {
+          title: currentTitle || "Untitled Note",
+          content: currentContent,
+        };
+        setLastSaved(new Date());
+        setHasUnsaved(false);
+      } catch (error) {
+        Alert.alert(
+          "Auto-save Failed",
+          "Changes will be saved when you press Done"
+        );
+      } finally {
+        setIsSaving(false);
+      }
+    }, 3000),
+    [dispatch, id, checkChanges]
+  );
+
+  // Handling Done button
+  const handlingDone = useCallback(
     async (isDonePressed: boolean = false) => {
       const trimmedTitle = title.trim();
       const trimmedContent = content.trim();
@@ -95,18 +163,11 @@ export default function EditNote() {
           ]);
           return;
         }
-      } else {
-        if (!trimmedTitle && !trimmedContent) {
-          return;
-        }
-      }
-
-      if (!checkChanges() && !isDonePressed) {
-        return;
       }
 
       try {
         setIsSaving(true);
+        debouncedSave.cancel();
 
         await dispatch(
           editNote({
@@ -126,52 +187,118 @@ export default function EditNote() {
         setHasUnsaved(false);
 
         if (isDonePressed) {
-          router.push(`/notes/view/${id}`);
+          setTimeout(() => {
+            router.push(`/notes/view/${id}`);
+          }, 100);
         }
       } catch (error) {
-        Alert.alert(
-          "Error",
-          isDonePressed ? "Failed to save note" : "Auto-save Failed"
-        );
+        if (isDonePressed) {
+          Alert.alert("Error", "Failed to save note");
+        }
       } finally {
         setIsSaving(false);
       }
     },
-    [id, title, content, dispatch, checkChanges]
+    [id, title, content, dispatch, debouncedSave]
   );
 
-  // Auto Saving, works only if there are changes
-  useEffect(() => {
+  // Handling Back Button
+  const handleBack = useCallback(() => {
     if (hasUnsaved) {
-      const timer = setTimeout(() => saveNote(false), 30000);
-      return () => clearTimeout(timer);
-    }
-  }, [title, content, saveNote, hasUnsaved]);
-
-  const handleDone = useCallback(() => {
-    saveNote(true);
-  }, [saveNote]);
-
-  const handleTextChange = (text: string, isTitle: boolean) => {
-    if (isTitle) {
-      setTitle(text);
+      Alert.alert("Save Changes?", "Do you want to save your changes?", [
+        {
+          text: "Don't Save",
+          style: "destructive",
+          onPress: () => {
+            setTimeout(() => {
+              router.push("/(app)/dashboard");
+            }, 100);
+          },
+        },
+        {
+          text: "Save",
+          onPress: async () => {
+            await handlingDone(true);
+            setTimeout(() => {
+              router.push("/(app)/dashboard");
+            }, 100);
+          },
+        },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+      ]);
     } else {
-      setContent(text);
+      setTimeout(() => {
+        router.push("/(app)/dashboard");
+      }, 100);
     }
+  }, [hasUnsaved, handlingDone]);
+
+  const handleContentChange = (newContent: string) => {
+    setContent(newContent);
   };
 
+  // When a note loaded update states
+  useEffect(() => {
+    if (note) {
+      setTitle(note.title);
+      setContent(note.content);
+      setLastSaved(new Date(note.updatedAt));
+      lastSavedContent.current = {
+        title: note.title,
+        content: note.content,
+      };
+    }
+  }, [note]);
+
+  // Component Cleanup
+  useEffect(() => {
+    return () => {
+      debouncedSave.cancel();
+      setContent("");
+      setTitle("");
+      setIsSaving(false);
+      setHasUnsaved(false);
+    };
+  }, [debouncedSave]);
+
+  // Checking if there are changes
+  useEffect(() => {
+    checkChanges();
+  }, [title, content, checkChanges]);
+
+  // Auto Saving
+  useEffect(() => {
+    if (hasUnsaved) {
+      debouncedSave(title.trim(), content.trim());
+    }
+
+    return () => {
+      debouncedSave.cancel();
+    };
+  }, [title, content, hasUnsaved, debouncedSave]);
+
+  // Closing Keyboard
   const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <KeyboardAvoidingView className="flex-1 bg-background dark:bg-background-dark">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        className="flex-1 bg-background dark:bg-background-dark"
+      >
         <Header
           showBack
-          onBackPress={() => router.push("/(app)/dashboard")}
+          onBackPress={handleBack}
           rightElement={
-            <TouchableOpacity onPress={handleDone} className="px-4 py-2">
+            <TouchableOpacity
+              onPress={() => handlingDone(true)}
+              className="px-4 py-2"
+            >
               <Text
                 className={`text-base text-right font-medium ${
                   hasUnsaved
@@ -185,48 +312,33 @@ export default function EditNote() {
           }
         />
 
-        <ScrollView
-          className="flex-1"
-          keyboardDismissMode="on-drag"
-          keyboardShouldPersistTaps="handled"
-        >
-          <View className="px-4">
-            {lastSaved && (
-              <View className="flex-row justify-end items-center mt-2 mb-2">
-                <Text className="text-text-secondary dark:text-text-dark-secondary text-sm mr-1">
-                  Last saved:
-                </Text>
-                <Text className="text-text-secondary dark:text-text-dark-secondary text-sm">
-                  {formatLastSaved(lastSaved)}
-                </Text>
-                {hasUnsaved && (
-                  <Text className="text-accent text-sm ml-2">
-                    (Unsaved changes)
-                  </Text>
-                )}
-              </View>
+        <View className="px-4 py-2">
+          <TextInput
+            className="text-xl font-semibold text-primary dark:text-primary-dark py-4"
+            placeholder="Title"
+            value={title === "Untitled Note" ? "" : title}
+            onChangeText={setTitle}
+            placeholderTextColor={isDark ? "#666666" : "#999999"}
+          />
+        </View>
+
+        {lastSaved && (
+          <View className="flex-row justify-end items-center px-4 mb-2">
+            <Text className="text-text-secondary dark:text-text-dark-secondary text-sm mr-1">
+              Last saved:
+            </Text>
+            <Text className="text-text-secondary dark:text-text-dark-secondary text-sm">
+              {formatLastSaved(lastSaved)}
+            </Text>
+            {hasUnsaved && (
+              <Text className="text-accent text-sm ml-2">
+                (Unsaved changes)
+              </Text>
             )}
-
-            <TextInput
-              className="text-xl font-semibold text-primary dark:text-primary-dark py-4 border-b border-border dark:border-border-dark"
-              placeholder="Title"
-              value={title === "Untitled Note" ? "" : title}
-              onChangeText={(text) => handleTextChange(text, true)}
-              placeholderTextColor={isDark ? "#666666" : "#999999"}
-            />
-
-            <TextInput
-              className="flex-1 text-base text-primary dark:text-primary-dark py-4"
-              placeholder="Start writing here"
-              value={content}
-              onChangeText={(text) => handleTextChange(text, false)}
-              multiline
-              textAlignVertical="top"
-              placeholderTextColor={isDark ? "#666666" : "#999999"}
-              scrollEnabled={false}
-            />
           </View>
-        </ScrollView>
+        )}
+
+        {renderEditor()}
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );

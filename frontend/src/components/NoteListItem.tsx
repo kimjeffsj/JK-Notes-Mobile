@@ -18,6 +18,14 @@ const NoteListItem = ({ note, isPinned }: NoteListItemProps) => {
         : undefined,
   });
 
+  const stripHtmlTags = (html: string) => {
+    return html
+      .replace(/&nbsp;/g, " ") // Replace &nbsp; to space
+      .replace(/<[^>]+>/g, "") // Delete HTML tags
+      .replace(/\s+/g, " ") // Spaces to one space
+      .trim(); // Cut Front and back
+  };
+
   return (
     <TouchableOpacity
       className="px-4 py-3 bg-background dark:bg-background-dark 
@@ -50,7 +58,7 @@ const NoteListItem = ({ note, isPinned }: NoteListItemProps) => {
               className="text-text-secondary dark:text-text-dark-secondary flex-1"
               numberOfLines={1}
             >
-              {note.content}
+              {stripHtmlTags(note.content)}
             </Text>
           </View>
         </View>
