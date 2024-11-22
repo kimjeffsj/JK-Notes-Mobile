@@ -4,6 +4,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -18,6 +19,8 @@ import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
 import { editNote } from "@/shared/store/slices/noteSlice";
 import { useTheme } from "@/shared/hooks/useTheme";
 import RichTextEditor from "@/components/RichEditor";
+import { NoteImage } from "@/shared/types/note/note";
+import ImageSection from "@/components/ImageSection";
 
 export default function EditNote() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -38,6 +41,7 @@ export default function EditNote() {
       lastSavedContent.current = {
         title: note.title,
         content: note.content,
+        images: note.images || [],
       };
     }
   }, [note]);
@@ -53,10 +57,12 @@ export default function EditNote() {
   const lastSavedContent = useRef({
     title: note?.title || "",
     content: note?.content || "",
+    images: note?.images || [],
   });
 
   const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
+  const [images, setImages] = useState<NoteImage[]>(note?.images || []);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(
     note ? new Date(note.updatedAt) : null
@@ -72,11 +78,18 @@ export default function EditNote() {
     const savedTitle = lastSavedContent.current.title.trim();
     const savedContent = lastSavedContent.current.content.trim();
 
+    const imagesChanged =
+      images.length !== lastSavedContent.current.images.length ||
+      images.some((img) => img._id.startsWith("temp_"));
+
     const hasChanges =
-      currentTitle !== savedTitle || currentContent !== savedContent;
+      currentTitle !== savedTitle ||
+      currentContent !== savedContent ||
+      imagesChanged;
+
     setHasUnsaved(hasChanges);
     return hasChanges;
-  }, [title, content]);
+  }, [title, content, images]);
 
   // Rendering Editor
   const renderEditor = () => {
@@ -135,6 +148,7 @@ export default function EditNote() {
         lastSavedContent.current = {
           title: currentTitle || "Untitled Note",
           content: currentContent,
+          images: [...images],
         };
         setLastSaved(new Date());
         setHasUnsaved(false);
@@ -147,7 +161,7 @@ export default function EditNote() {
         setIsSaving(false);
       }
     }, 3000),
-    [dispatch, id, checkChanges]
+    [dispatch, id, checkChanges, images]
   );
 
   // Handling Done button
@@ -156,13 +170,16 @@ export default function EditNote() {
       const trimmedTitle = title.trim();
       const trimmedContent = content.trim();
 
-      if (isDonePressed) {
-        if (!trimmedContent) {
-          Alert.alert("Empty Note", "Please write something before saving.", [
-            { text: "OK" },
-          ]);
-          return;
-        }
+      if (
+        isDonePressed &&
+        !trimmedContent &&
+        !trimmedTitle &&
+        images.length === 0
+      ) {
+        Alert.alert("Empty Note", "Please write something before saving.", [
+          { text: "OK" },
+        ]);
+        return;
       }
 
       try {
@@ -182,6 +199,7 @@ export default function EditNote() {
         lastSavedContent.current = {
           title: trimmedTitle || "Untitled Note",
           content: trimmedContent,
+          images: [...images],
         };
         setLastSaved(new Date());
         setHasUnsaved(false);
@@ -199,7 +217,7 @@ export default function EditNote() {
         setIsSaving(false);
       }
     },
-    [id, title, content, dispatch, debouncedSave]
+    [id, title, content, images, dispatch, debouncedSave]
   );
 
   // Handling Back Button
@@ -249,6 +267,7 @@ export default function EditNote() {
       lastSavedContent.current = {
         title: note.title,
         content: note.content,
+        images: note.images || [],
       };
     }
   }, [note]);
@@ -278,7 +297,7 @@ export default function EditNote() {
     return () => {
       debouncedSave.cancel();
     };
-  }, [title, content, hasUnsaved, debouncedSave]);
+  }, [title, content, images, hasUnsaved, debouncedSave]);
 
   // Closing Keyboard
   const dismissKeyboard = () => {
@@ -312,33 +331,43 @@ export default function EditNote() {
           }
         />
 
-        <View className="px-4 py-2">
-          <TextInput
-            className="text-xl font-semibold text-primary dark:text-primary-dark py-4"
-            placeholder="Title"
-            value={title === "Untitled Note" ? "" : title}
-            onChangeText={setTitle}
-            placeholderTextColor={isDark ? "#666666" : "#999999"}
-          />
-        </View>
-
-        {lastSaved && (
-          <View className="flex-row justify-end items-center px-4 mb-2">
-            <Text className="text-text-secondary dark:text-text-dark-secondary text-sm mr-1">
-              Last saved:
-            </Text>
-            <Text className="text-text-secondary dark:text-text-dark-secondary text-sm">
-              {formatLastSaved(lastSaved)}
-            </Text>
-            {hasUnsaved && (
-              <Text className="text-accent text-sm ml-2">
-                (Unsaved changes)
-              </Text>
-            )}
+        <ScrollView>
+          <View className="px-4 py-2">
+            <TextInput
+              className="text-xl font-semibold text-primary dark:text-primary-dark py-4"
+              placeholder="Title"
+              value={title === "Untitled Note" ? "" : title}
+              onChangeText={setTitle}
+              placeholderTextColor={isDark ? "#666666" : "#999999"}
+            />
           </View>
-        )}
 
-        {renderEditor()}
+          {lastSaved && (
+            <View className="flex-row justify-end items-center px-4 mb-2">
+              <Text className="text-text-secondary dark:text-text-dark-secondary text-sm mr-1">
+                Last saved:
+              </Text>
+              <Text className="text-text-secondary dark:text-text-dark-secondary text-sm">
+                {formatLastSaved(lastSaved)}
+              </Text>
+              {hasUnsaved && (
+                <Text className="text-accent text-sm ml-2">
+                  (Unsaved changes)
+                </Text>
+              )}
+            </View>
+          )}
+
+          <View className="px-4">
+            <ImageSection
+              noteId={id}
+              images={images}
+              onImagesChange={setImages}
+            />
+          </View>
+
+          {renderEditor()}
+        </ScrollView>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
