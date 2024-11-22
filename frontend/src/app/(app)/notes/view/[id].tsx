@@ -5,7 +5,7 @@ import { useTheme } from "@/shared/hooks/useTheme";
 import { deleteNote } from "@/shared/store/slices/noteSlice";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -14,16 +14,72 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import WebView from "react-native-webview";
+
+// HTML Styling template
+const getHtmlContent = (content: string, isDark: boolean) => `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <style>
+      body {
+        font-family: -apple-system, system-ui;
+        font-size: 16px;
+        line-height: 1.5;
+        color: ${isDark ? "#ffffff" : "#1a1a1a"};
+        background-color: ${isDark ? "#1a1a1a" : "#f8f7f2"};
+        padding: 12px;
+        margin: 0;
+      }
+      img {
+        max-width: 100%;
+        height: auto;
+      }
+      a {
+        color: #dfa46d;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        color: ${isDark ? "#ffffff" : "#1a1a1a"};
+        line-height: 1.2;
+      }
+      ul, ol {
+        padding-left: 20px;
+      }
+      blockquote {
+        margin: 10px 0;
+        padding: 10px 20px;
+        background: ${isDark ? "#2a2a2a" : "#f0f0f0"};
+        border-left: 4px solid #dfa46d;
+      }
+      pre {
+        background: ${isDark ? "#2a2a2a" : "#f0f0f0"};
+        padding: 10px;
+        overflow-x: auto;
+        border-radius: 4px;
+      }
+      code {
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    ${content}
+  </body>
+</html>
+`;
 
 export default function NoteDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const dispatch = useAppDispatch();
   const { isDark } = useTheme();
 
+  // Fetching note
   const note = useAppSelector((state) =>
     state.notes.notes.find((note) => note._id === id)
   );
 
+  // Formatting date
   const formattedDate = useMemo(() => {
     if (!note) return "";
 
@@ -49,6 +105,7 @@ export default function NoteDetail() {
     }
   }, [note?.updatedAt]);
 
+  // Handling Deletion
   const handleDelete = useCallback(async () => {
     if (!note) return;
 
@@ -74,10 +131,18 @@ export default function NoteDetail() {
     ]);
   }, [note, dispatch]);
 
+  // Handling Editing
   const handleEdit = useCallback(() => {
     if (!note) return;
     router.push(`/notes/edit/${note._id}`);
   }, [note]);
+
+  // WebView height state
+  const [webViewHeight, setWebViewHeight] = useState(0);
+
+  const handleWebViewMessage = (event: any) => {
+    setWebViewHeight(parseInt(event.nativeEvent.data, 10));
+  };
 
   if (!note) {
     return <Loading />;
@@ -114,10 +179,22 @@ export default function NoteDetail() {
             Last Updated: {formattedDate}
           </Text>
         </View>
+
         <View className="py-4">
-          <Text className="text-primary dark:text-primary-dark text-base leading-6">
-            {note.content}
-          </Text>
+          <WebView
+            source={{ html: getHtmlContent(note.content, isDark) }}
+            className="bg-transparent"
+            scrollEnabled={false}
+            onMessage={handleWebViewMessage}
+            injectedJavaScript={`
+                window.ReactNativeWebView.postMessage(document.documentElement.scrollHeight);
+                true;
+              `}
+            style={{ height: webViewHeight }}
+            showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+            containerStyle={{ flex: 0 }}
+          />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
