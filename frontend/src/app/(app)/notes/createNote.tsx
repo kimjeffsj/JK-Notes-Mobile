@@ -86,7 +86,6 @@ export default function CreateNote() {
         let result;
 
         if (savedNoteId.current) {
-          // 이미 저장된 노트 업데이트
           result = await dispatch(
             createNote({
               title: currentTitle || "Untitled Note",
@@ -94,7 +93,6 @@ export default function CreateNote() {
             })
           ).unwrap();
         } else {
-          // 새 노트 생성
           result = await dispatch(
             createNote({
               title: currentTitle || "Untitled Note",
@@ -126,17 +124,6 @@ export default function CreateNote() {
     }, 3000),
     [dispatch]
   );
-
-  useEffect(() => {
-    return () => {
-      debouncedSave.cancel();
-      setContent("");
-      setTitle("");
-      setIsSaving(false);
-      setHasChanges(false);
-      setEditorKey((prev) => prev + 1);
-    };
-  }, [debouncedSave]);
 
   // Checking if content changed
   useEffect(() => {
@@ -189,7 +176,7 @@ export default function CreateNote() {
           text: "Don't Save",
           style: "destructive",
           onPress: () => {
-            debouncedSave.cancel(); // 진행 중인 자동 저장 취소
+            debouncedSave.cancel();
             setTimeout(() => {
               router.push("/(app)/dashboard");
             }, 100);
@@ -199,7 +186,7 @@ export default function CreateNote() {
           text: "Save",
           onPress: async () => {
             try {
-              debouncedSave.cancel(); // 진행 중인 자동 저장 취소
+              debouncedSave.cancel();
               setIsSaving(true);
 
               const trimmedTitle = title.trim();
@@ -239,16 +226,38 @@ export default function CreateNote() {
         },
       ]);
     } else {
-      debouncedSave.cancel(); // 진행 중인 자동 저장 취소
+      debouncedSave.cancel();
       router.push("/(app)/dashboard");
     }
   }, [hasChanges, title, content, dispatch, debouncedSave]);
+
+  // Editor Reset
+  useFocusEffect(
+    useCallback(() => {
+      setEditorKey((prev) => prev + 1);
+      return () => {
+        setContent("");
+      };
+    }, [])
+  );
+
+  // Cleaning up
+  useEffect(() => {
+    return () => {
+      debouncedSave.cancel();
+      setContent("");
+      setTitle("");
+      setIsSaving(false);
+      setHasChanges(false);
+    };
+  }, [debouncedSave]);
 
   // Closing Keyboard
   const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
 
+  // Rendering Editor
   const renderEditor = () => (
     <View style={{ flex: 1 }}>
       <RichTextEditor

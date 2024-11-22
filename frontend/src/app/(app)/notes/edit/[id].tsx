@@ -29,21 +29,25 @@ export default function EditNote() {
     state.notes.notes.find((note) => note._id === id)
   );
 
-  const [title, setTitle] = useState(note?.title || "");
-  const [content, setContent] = useState(note?.content || "");
-  const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [hasUnsaved, setHasUnsaved] = useState(false);
-  const [editorKey, setEditorKey] = useState(0);
-
-  // When a note loaded update states
+  // Resetting Editor
   useEffect(() => {
     if (note) {
       setTitle(note.title);
       setContent(note.content);
       setLastSaved(new Date(note.updatedAt));
+      lastSavedContent.current = {
+        title: note.title,
+        content: note.content,
+      };
     }
   }, [note]);
+
+  useEffect(() => {
+    setEditorKey((prev) => prev + 1);
+    return () => {
+      setContent("");
+    };
+  }, []);
 
   // ref for tracking last saved note
   const lastSavedContent = useRef({
@@ -51,6 +55,16 @@ export default function EditNote() {
     content: note?.content || "",
   });
 
+  const [title, setTitle] = useState(note?.title || "");
+  const [content, setContent] = useState(note?.content || "");
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(
+    note ? new Date(note.updatedAt) : null
+  );
+  const [hasUnsaved, setHasUnsaved] = useState(false);
+  const [editorKey, setEditorKey] = useState(0);
+
+  // Callback functions
   // Checking changes
   const checkChanges = useCallback(() => {
     const currentTitle = title.trim();
@@ -63,26 +77,6 @@ export default function EditNote() {
     setHasUnsaved(hasChanges);
     return hasChanges;
   }, [title, content]);
-
-  useEffect(() => {
-    if (!note) {
-      router.replace("/(app)/dashboard");
-    }
-
-    return () => {
-      // cleanup
-      setContent("");
-      setTitle("");
-      setEditorKey((prev) => prev + 1); // resetting editor
-    };
-  }, [note]);
-
-  // When note changes reset editor
-  useEffect(() => {
-    if (note) {
-      setEditorKey((prev) => prev + 1);
-    }
-  }, [note]);
 
   // Rendering Editor
   const renderEditor = () => {
@@ -99,11 +93,6 @@ export default function EditNote() {
       </View>
     );
   };
-
-  // Checking if there are changes
-  useEffect(() => {
-    checkChanges();
-  }, [title, content, checkChanges]);
 
   // Formatting Saved time
   const formatLastSaved = useCallback((date: Date) => {
@@ -161,19 +150,8 @@ export default function EditNote() {
     [dispatch, id, checkChanges]
   );
 
-  // Auto Saving
-  useEffect(() => {
-    if (hasUnsaved) {
-      debouncedSave(title.trim(), content.trim());
-    }
-
-    return () => {
-      debouncedSave.cancel();
-    };
-  }, [title, content, hasUnsaved, debouncedSave]);
-
-  //
-  const saveNote = useCallback(
+  // Handling Done button
+  const handlingDone = useCallback(
     async (isDonePressed: boolean = false) => {
       const trimmedTitle = title.trim();
       const trimmedContent = content.trim();
@@ -189,7 +167,7 @@ export default function EditNote() {
 
       try {
         setIsSaving(true);
-        debouncedSave.cancel(); // 진행 중인 자동 저장 취소
+        debouncedSave.cancel();
 
         await dispatch(
           editNote({
@@ -240,7 +218,7 @@ export default function EditNote() {
         {
           text: "Save",
           onPress: async () => {
-            await saveNote(true);
+            await handlingDone(true);
             setTimeout(() => {
               router.push("/(app)/dashboard");
             }, 100);
@@ -256,20 +234,51 @@ export default function EditNote() {
         router.push("/(app)/dashboard");
       }, 100);
     }
-  }, [hasUnsaved, saveNote]);
+  }, [hasUnsaved, handlingDone]);
 
   const handleContentChange = (newContent: string) => {
     setContent(newContent);
   };
 
+  // When a note loaded update states
+  useEffect(() => {
+    if (note) {
+      setTitle(note.title);
+      setContent(note.content);
+      setLastSaved(new Date(note.updatedAt));
+      lastSavedContent.current = {
+        title: note.title,
+        content: note.content,
+      };
+    }
+  }, [note]);
+
+  // Component Cleanup
   useEffect(() => {
     return () => {
-      // 컴포넌트 언마운트 시 실행될 cleanup
       debouncedSave.cancel();
       setContent("");
       setTitle("");
+      setIsSaving(false);
+      setHasUnsaved(false);
     };
-  }, []);
+  }, [debouncedSave]);
+
+  // Checking if there are changes
+  useEffect(() => {
+    checkChanges();
+  }, [title, content, checkChanges]);
+
+  // Auto Saving
+  useEffect(() => {
+    if (hasUnsaved) {
+      debouncedSave(title.trim(), content.trim());
+    }
+
+    return () => {
+      debouncedSave.cancel();
+    };
+  }, [title, content, hasUnsaved, debouncedSave]);
 
   // Closing Keyboard
   const dismissKeyboard = () => {
@@ -287,7 +296,7 @@ export default function EditNote() {
           onBackPress={handleBack}
           rightElement={
             <TouchableOpacity
-              onPress={() => saveNote(true)}
+              onPress={() => handlingDone(true)}
               className="px-4 py-2"
             >
               <Text
