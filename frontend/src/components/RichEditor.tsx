@@ -1,4 +1,3 @@
-// src/components/RichEditor/index.tsx
 import React, { useRef, useEffect } from "react";
 import { View, Text } from "react-native";
 import {
