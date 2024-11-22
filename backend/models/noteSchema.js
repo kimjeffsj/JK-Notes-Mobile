@@ -1,5 +1,20 @@
 const mongoose = require("mongoose");
 
+const imageSchema = new mongoose.Schema({
+  url: {
+    type: String,
+    required: true,
+  },
+  caption: {
+    type: String,
+    default: "",
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
 const noteSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -16,6 +31,7 @@ const noteSchema = new mongoose.Schema({
   plainContent: {
     type: String,
   },
+  images: [imageSchema],
   creator: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -32,7 +48,6 @@ const noteSchema = new mongoose.Schema({
 
 noteSchema.pre("save", function (next) {
   if (this.isModified("content")) {
-    // Simple HTML to text conversion
     this.plainContent = this.content.replace(/<[^>]*>/g, "");
   }
   next();
