@@ -1,4 +1,4 @@
-import { NotesState } from "@/shared/types/note/note";
+import { Note, NotesState } from "@/shared/types/note/note";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import api from "@/utils/api";
 
@@ -9,7 +9,6 @@ const initialState: NotesState = {
   error: null,
 };
 
-// Fetching Note action
 export const fetchNotes = createAsyncThunk(
   "notes/fetchAll",
   async (_, { rejectWithValue }) => {
@@ -24,7 +23,6 @@ export const fetchNotes = createAsyncThunk(
   }
 );
 
-// Creating note action
 export const createNote = createAsyncThunk(
   "notes/create",
   async (data: { title: string; content: string }, { rejectWithValue }) => {
@@ -40,7 +38,6 @@ export const createNote = createAsyncThunk(
   }
 );
 
-// View Detail note action
 export const detailNote = createAsyncThunk(
   "notes/detailNote",
   async (id: string, { rejectWithValue }) => {
@@ -55,7 +52,6 @@ export const detailNote = createAsyncThunk(
   }
 );
 
-// Edit note action
 export const editNote = createAsyncThunk(
   "notes/edit",
   async (
@@ -77,7 +73,6 @@ export const editNote = createAsyncThunk(
   }
 );
 
-// Delete note action
 export const deleteNote = createAsyncThunk(
   "notes/delete",
   async (id: string, { rejectWithValue }) => {
@@ -92,7 +87,6 @@ export const deleteNote = createAsyncThunk(
   }
 );
 
-// Delete All notes action
 export const deleteAllNotes = createAsyncThunk(
   "notes/deleteAll",
   async (_, { rejectWithValue }) => {
@@ -102,59 +96,6 @@ export const deleteAllNotes = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to delete all notes"
-      );
-    }
-  }
-);
-
-// Image Upload action
-export const uploadNoteImage = createAsyncThunk(
-  "notes/uploadImage",
-  async (
-    {
-      noteId,
-      imageData,
-      caption,
-    }: {
-      noteId: string;
-      imageData: string;
-      caption?: string;
-    },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await api.post(`/notes/${noteId}/images`, {
-        imageData,
-        caption,
-      });
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to upload the image"
-      );
-    }
-  }
-);
-
-// Image delete action
-export const deleteNoteImage = createAsyncThunk(
-  "notes/deleteImage",
-  async (
-    {
-      noteId,
-      imageId,
-    }: {
-      noteId: string;
-      imageId: string;
-    },
-    { rejectWithValue }
-  ) => {
-    try {
-      await api.delete(`/notes/${noteId}/images/${imageId}`);
-      return { noteId, imageId };
-    } catch (error: any) {
-      return rejectWithValue(
-        error.responser?.data?.message || "Failed to delete the image"
       );
     }
   }
@@ -180,7 +121,6 @@ const noteSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // Image Upload
     builder
       // Fetching Notes
       .addCase(fetchNotes.pending, (state) => {
@@ -283,45 +223,6 @@ const noteSlice = createSlice({
         state.error = null;
       })
       .addCase(deleteAllNotes.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-      })
-      // Image Upload
-      .addCase(uploadNoteImage.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(uploadNoteImage.fulfilled, (state, action) => {
-        state.isLoading = false;
-        const noteIndex = state.notes.findIndex(
-          (note) => note._id === action.payload.noteId
-        );
-        if (noteIndex !== -1) {
-          state.notes[noteIndex].images.push(action.payload.image);
-        }
-      })
-      .addCase(uploadNoteImage.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-      })
-
-      // Delete Image
-      .addCase(deleteNoteImage.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(deleteNoteImage.fulfilled, (state, action) => {
-        state.isLoading = false;
-        const noteIndex = state.notes.findIndex(
-          (note) => note._id === action.payload.noteId
-        );
-        if (noteIndex !== -1) {
-          state.notes[noteIndex].images = state.notes[noteIndex].images.filter(
-            (img) => img._id !== action.payload.imageId
-          );
-        }
-      })
-      .addCase(deleteNoteImage.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });
