@@ -45,6 +45,8 @@ export default function CreateNote() {
 
   // Checking changes
   const checkChanges = useCallback(() => {
+    if (isSaving) return;
+
     const trimmedTitle = title.trim();
     const trimmedContent = content.trim();
     const savedTitle = lastSavedContent.current.title.trim();
@@ -92,7 +94,7 @@ export default function CreateNote() {
     return date.toLocaleString();
   }, []);
 
-  // Auto-Save function
+  // Debounced Saving
   const debouncedSave = useCallback(
     debounce(
       async (
@@ -171,6 +173,8 @@ export default function CreateNote() {
 
   // Handling done button
   const handleDone = useCallback(async () => {
+    if (isSaving) return;
+
     const trimmedTitle = title.trim();
     const trimmedContent = content.trim();
 

@@ -26,7 +26,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const getEditor = () => richText.current;
 
-  // cleanup 함수
+  // cleanup
   useEffect(() => {
     return () => {
       if (richText.current) {

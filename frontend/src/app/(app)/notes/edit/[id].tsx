@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 import { debounce } from "lodash";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 
 import Header from "@/components/Header";
 import { useAppDispatch, useAppSelector } from "@/shared/hooks/useRedux";
@@ -20,6 +20,7 @@ import { useTheme } from "@/shared/hooks/useTheme";
 import RichTextEditor from "@/components/RichEditor";
 import { UploadedImage } from "@/shared/types/note/note";
 import ImageUpload from "@/components/ImageUpload";
+import Loading from "@/components/Loading";
 
 export default function EditNote() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -38,8 +39,18 @@ export default function EditNote() {
   const [lastSaved, setLastSaved] = useState<Date | null>(
     note ? new Date(note.updatedAt) : null
   );
-  const [hasUnsaved, setHasUnsaved] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+
   const [editorKey, setEditorKey] = useState(0);
+
+  // ref for tracking last saved note
+  const lastSavedContent = useRef({
+    title: note?.title || "",
+    content: note?.content || "",
+    images: note?.images || [],
+  });
+
+  const savedNoteId = useRef<string | null>(null);
 
   // initial note data
   useEffect(() => {
@@ -56,11 +67,37 @@ export default function EditNote() {
     }
   }, [note]);
 
-  // Handle Image update
-  const handleImagesUpdated = useCallback((newImages: UploadedImage[]) => {
-    setImages(newImages);
-    setHasUnsaved(true);
-  }, []);
+  // Checking changes
+  const checkChanges = useCallback(() => {
+    if (isSaving) return;
+
+    const trimmedTitle = title.trim();
+    const trimmedContent = content.trim();
+    const savedTitle = lastSavedContent.current.title.trim();
+    const savedContent = lastSavedContent.current.content.trim();
+    const hasImageChanges =
+      images.length !== lastSavedContent.current.images.length;
+
+    if (
+      !trimmedTitle &&
+      !trimmedContent &&
+      !images.length &&
+      !savedTitle &&
+      !savedContent &&
+      !lastSavedContent.current.images.length
+    ) {
+      setHasChanges(false);
+      return false;
+    }
+
+    const hasNewChanges =
+      trimmedTitle !== savedTitle ||
+      trimmedContent !== savedContent ||
+      hasImageChanges;
+
+    setHasChanges(hasNewChanges);
+    return hasNewChanges;
+  }, [title, content, images]);
 
   useEffect(() => {
     setEditorKey((prev) => prev + 1);
@@ -68,34 +105,6 @@ export default function EditNote() {
       setContent("");
     };
   }, []);
-
-  // ref for tracking last saved note
-  const lastSavedContent = useRef({
-    title: note?.title || "",
-    content: note?.content || "",
-    images: note?.images || [],
-  });
-
-  // Checking changes
-  const checkChanges = useCallback(() => {
-    const currentTitle = title.trim();
-    const currentContent = content.trim();
-    const savedTitle = lastSavedContent.current.title.trim();
-    const savedContent = lastSavedContent.current.content.trim();
-
-    // 이미지 변경 감지
-    const hasImageChanges =
-      images.length !== lastSavedContent.current.images.length ||
-      images.some(
-        (img, idx) => img.url !== lastSavedContent.current.images[idx]?.url
-      );
-
-    return (
-      currentTitle !== savedTitle ||
-      currentContent !== savedContent ||
-      hasImageChanges
-    );
-  }, [title, content, images]);
 
   // Formatting Saved time
   const formatLastSaved = useCallback((date: Date) => {
@@ -124,21 +133,42 @@ export default function EditNote() {
         currentContent: string,
         currentImages: UploadedImage[]
       ) => {
-        if (!id || !currentContent.trim()) return;
+        if (!currentContent.trim()) {
+          console.log("Skipping auto-save: Content is empty");
+          return;
+        }
 
         try {
           setIsSaving(true);
+          let result;
 
-          const result = await dispatch(
-            editNote({
-              id,
-              data: {
-                title: currentTitle || "Untitled Note",
-                content: currentContent,
-                images: currentImages,
-              },
-            })
-          ).unwrap();
+          if (savedNoteId.current) {
+            result = await dispatch(
+              editNote({
+                id,
+                data: {
+                  title: currentTitle || "Untitled Note",
+                  content: currentContent,
+                  images: currentImages,
+                },
+              })
+            ).unwrap();
+          } else {
+            result = await dispatch(
+              editNote({
+                id,
+                data: {
+                  title: currentTitle || "Untitled Note",
+                  content: currentContent,
+                  images: currentImages,
+                },
+              })
+            ).unwrap();
+
+            if (result?._id) {
+              savedNoteId.current = result._id;
+            }
+          }
 
           lastSavedContent.current = {
             title: currentTitle || "Untitled Note",
@@ -146,21 +176,37 @@ export default function EditNote() {
             images: currentImages,
           };
 
-          setLastSaved(new Date());
-          setHasUnsaved(false);
+          const now = new Date();
+          setLastSaved(now);
+          setHasChanges(false);
         } catch (error) {
-          Alert.alert(
-            "Auto-save Failed",
-            "Changes will be saved when you press Done"
-          );
+          console.error("Auto-Save failed:", error);
         } finally {
           setIsSaving(false);
         }
       },
       3000
     ),
-    [dispatch, id]
+    [dispatch]
   );
+
+  // Checking if there are changes
+  useEffect(() => {
+    checkChanges();
+  }, [title, content, images, checkChanges]);
+
+  // Auto Saving
+  useEffect(() => {
+    if (hasChanges) {
+      debouncedSave(title.trim(), content.trim(), images);
+    }
+  }, [title, content, hasChanges, debouncedSave]);
+
+  // Handle Images uploaded
+  const handleImagesUploaded = (newImages: UploadedImage[]) => {
+    setImages(newImages);
+    setHasChanges(true);
+  };
 
   // Handling Done button
   const handleDone = useCallback(async () => {
@@ -178,7 +224,7 @@ export default function EditNote() {
       setIsSaving(true);
       debouncedSave.cancel();
 
-      await dispatch(
+      const result = await dispatch(
         editNote({
           id,
           data: {
@@ -189,25 +235,19 @@ export default function EditNote() {
         })
       ).unwrap();
 
-      lastSavedContent.current = {
-        title: trimmedTitle || "Untitled Note",
-        content: trimmedContent,
-        images: images,
-      };
-      setHasUnsaved(false);
-
-      router.push(`/notes/view/${id}`);
+      if (result?._id) {
+        router.push(`/notes/view/${result._id}`);
+      }
     } catch (error) {
-      console.error("Save error:", error);
       Alert.alert("Error", "Failed to save note");
     } finally {
       setIsSaving(false);
     }
-  }, [title, content, images, dispatch, debouncedSave, id, isSaving]);
+  }, [title, content, images, dispatch, debouncedSave]);
 
   // Handling Back Button
   const handleBack = useCallback(() => {
-    if (hasUnsaved) {
+    if (hasChanges) {
       Alert.alert("Save Changes?", "Do you want to save your changes?", [
         {
           text: "Don't Save",
@@ -229,8 +269,9 @@ export default function EditNote() {
               const trimmedTitle = title.trim();
               const trimmedContent = content.trim();
 
-              if (!trimmedContent) {
-                Alert.alert("Error", "Please write some content before saving");
+              if (!trimmedContent && !trimmedTitle && !images.length) {
+                setIsSaving(false);
+                router.push("/(app)/dashboard");
                 return;
               }
 
@@ -269,35 +310,28 @@ export default function EditNote() {
       debouncedSave.cancel();
       router.push("/(app)/dashboard");
     }
-  }, [hasUnsaved, title, content, images, dispatch, debouncedSave, id]);
+  }, [hasChanges, title, content, images, dispatch, debouncedSave, id]);
 
-  const handleContentChange = (newContent: string) => {
-    setContent(newContent);
-    setHasUnsaved(true);
-  };
+  useFocusEffect(
+    useCallback(() => {
+      setEditorKey((prev) => prev + 1);
+      return () => {
+        setContent("");
+      };
+    }, [])
+  );
 
-  // Component Cleanup
+  // Cleaning up
   useEffect(() => {
     return () => {
       debouncedSave.cancel();
+      setTitle("");
       setContent("");
       setImages([]);
       setIsSaving(false);
-      setHasUnsaved(false);
+      setHasChanges(false);
     };
   }, [debouncedSave]);
-
-  // Checking if there are changes
-  useEffect(() => {
-    checkChanges();
-  }, [title, content, images, checkChanges]);
-
-  // Auto Saving
-  useEffect(() => {
-    if (hasUnsaved && !isSaving) {
-      debouncedSave(title.trim(), content.trim(), images);
-    }
-  }, [title, content, images, hasUnsaved, debouncedSave, isSaving]);
 
   // Closing Keyboard
   const dismissKeyboard = () => {
@@ -305,20 +339,20 @@ export default function EditNote() {
   };
 
   // Rendering Editor
-  const renderEditor = () => {
-    if (!note || !content) return null;
+  const renderEditor = () => (
+    <View style={{ flex: 1 }}>
+      <RichTextEditor
+        key={editorKey}
+        initialContent={content}
+        onChangeContent={(text) => setContent(text)}
+        editorHeight={Platform.OS === "ios" ? 300 : 250}
+      />
+    </View>
+  );
 
-    return (
-      <View style={{ flex: 1 }}>
-        <RichTextEditor
-          key={editorKey}
-          initialContent={content}
-          onChangeContent={handleContentChange}
-          editorHeight={Platform.OS === "ios" ? 300 : 250}
-        />
-      </View>
-    );
-  };
+  if (!note) {
+    return <Loading />;
+  }
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
@@ -333,7 +367,7 @@ export default function EditNote() {
             <TouchableOpacity onPress={handleDone} className="px-4 py-2">
               <Text
                 className={`text-base text-right font-medium ${
-                  hasUnsaved
+                  hasChanges
                     ? "text-primary dark:text-primary-dark"
                     : "text-gray-300 dark:text-gray-600"
                 }`}
@@ -355,7 +389,7 @@ export default function EditNote() {
         </View>
 
         <ImageUpload
-          onImagesUploaded={handleImagesUpdated}
+          onImagesUploaded={handleImagesUploaded}
           existingImages={images}
           noteId={id}
         />
@@ -363,19 +397,18 @@ export default function EditNote() {
         {lastSaved && (
           <View className="flex-row justify-end items-center px-4 mb-2">
             <Text className="text-text-secondary dark:text-text-dark-secondary text-sm mr-1">
-              Last saved:
+              {savedNoteId.current ? "Last saved:" : "Draft saved:"}
             </Text>
             <Text className="text-text-secondary dark:text-text-dark-secondary text-sm">
               {formatLastSaved(lastSaved)}
             </Text>
-            {hasUnsaved && (
+            {hasChanges && (
               <Text className="text-accent text-sm ml-2">
                 (Unsaved changes)
               </Text>
             )}
           </View>
         )}
-
         {renderEditor()}
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>

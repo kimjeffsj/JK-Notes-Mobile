@@ -46,9 +46,6 @@ const generateThumbnail = async (file) => {
     const thumbnailFilename = `thumb-${path.basename(file.filename)}`;
     const thumbnailPath = path.join(thumbnailDir, thumbnailFilename);
 
-    console.log("Generating thumbnail for:", file.path);
-    console.log("Thumbnail will be saved at:", thumbnailPath);
-
     // Check exist
     if (!fs.existsSync(file.path)) {
       throw new Error(`Original file not found: ${file.path}`);
@@ -56,7 +53,6 @@ const generateThumbnail = async (file) => {
 
     // Check sharp data
     const metadata = await sharp(file.path).metadata();
-    console.log("Image metadata:", metadata);
 
     await sharp(file.path)
       .resize(300, 300, {
@@ -65,16 +61,6 @@ const generateThumbnail = async (file) => {
       })
       .jpeg({ quality: 80 })
       .toFile(thumbnailPath);
-
-    // Check Thumbnail
-    if (fs.existsSync(thumbnailPath)) {
-      const stats = fs.statSync(thumbnailPath);
-      console.log("Thumbnail created successfully:", {
-        path: thumbnailPath,
-        size: stats.size,
-        permissions: stats.mode.toString(8),
-      });
-    }
 
     return path.relative(process.cwd(), thumbnailPath).replace(/\\/g, "/");
   } catch (error) {
@@ -90,8 +76,6 @@ const processImages = async (req, res, next) => {
       return res.status(400).json({ message: "No files uploaded" });
     }
 
-    console.log("Processing images:", req.files);
-
     const processedImages = await Promise.all(
       req.files.map(async (file) => {
         try {
@@ -99,11 +83,6 @@ const processImages = async (req, res, next) => {
           const relativePath = path
             .relative(process.cwd(), file.path)
             .replace(/\\/g, "/");
-
-          console.log("Processed image:", {
-            originalPath: relativePath,
-            thumbnailPath: thumbnailPath,
-          });
 
           return {
             url: relativePath,
@@ -118,7 +97,6 @@ const processImages = async (req, res, next) => {
     );
 
     req.processedImages = processedImages;
-    console.log("Final processed images:", processedImages);
 
     next();
   } catch (error) {
@@ -129,7 +107,6 @@ const processImages = async (req, res, next) => {
         try {
           if (fs.existsSync(file.path)) {
             fs.unlinkSync(file.path);
-            console.log("Cleaned up original file:", file.path);
           }
           const thumbPath = path.join(
             thumbnailDir,
@@ -137,7 +114,6 @@ const processImages = async (req, res, next) => {
           );
           if (fs.existsSync(thumbPath)) {
             fs.unlinkSync(thumbPath);
-            console.log("Cleaned up thumbnail:", thumbPath);
           }
         } catch (e) {
           console.error("Cleanup error:", e);

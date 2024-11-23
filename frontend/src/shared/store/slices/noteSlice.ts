@@ -34,7 +34,6 @@ export const createNote = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      console.log("Creating note with data:", data); // debug
       const response = await api.post("/notes/create", {
         title: data.title,
         content: data.content,
@@ -45,10 +44,8 @@ export const createNote = createAsyncThunk(
         })),
       });
 
-      console.log("Create note response:", response.data); // debug
       return response.data.note;
     } catch (error: any) {
-      console.error("Create note error:", error); // debug
       return rejectWithValue(
         error.response?.data?.message || "Failed to create a note"
       );
@@ -87,8 +84,6 @@ export const editNote = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      console.log("Editing note:", { id, data });
-
       const response = await api.post(`/notes/edit/${id}`, {
         title: data.title,
         content: data.content,
@@ -98,8 +93,6 @@ export const editNote = createAsyncThunk(
           createdAt: img.createdAt || new Date().toISOString(),
         })),
       });
-
-      console.log("Edit note response:", response.data);
 
       return {
         _id: id,

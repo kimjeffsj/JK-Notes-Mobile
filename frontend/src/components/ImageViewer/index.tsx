@@ -43,7 +43,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
     >
       <View className="flex-1 bg-black">
         <View className="absolute top-12 right-4 z-10 flex-row items-center justify-between w-full px-4">
-          <Text className="text-white text-lg">
+          <Text className="text-white text-lg pl-10">
             {currentIndex + 1} / {images.length}
           </Text>
           <TouchableOpacity

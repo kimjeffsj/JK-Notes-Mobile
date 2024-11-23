@@ -66,16 +66,12 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         });
       });
 
-      console.log("Uploading images with formData:", formData);
-
       const response = await api.post("/notes/upload-images", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
         transformRequest: [(data) => data],
       });
-
-      console.log("Upload response:", response.data);
 
       if (response.data.images) {
         const newImages: UploadedImage[] = response.data.images;
@@ -130,10 +126,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     try {
       const image = images[index];
       if (image._id && noteId) {
-        console.log("Removing image:", { noteId, imageId: image._id });
-
         await api.delete(`/notes/${noteId}/images/${image._id}`);
-        console.log("Image deleted from server");
       }
 
       const newImages = images.filter((_, i) => i !== index);

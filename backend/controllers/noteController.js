@@ -175,8 +175,6 @@ const createNote = async (req, res) => {
       creator: req.user._id,
     });
 
-    console.log("Created note:", newNote);
-
     res.status(201).json({
       message: "Note successfully created",
       note: newNote,
@@ -242,7 +240,6 @@ const createNote = async (req, res) => {
 const editNote = async (req, res) => {
   try {
     const { _id } = req.params;
-    console.log("Edit Note Request:", { id: _id, body: req.body });
 
     const { title, content, images } = req.body;
 
@@ -281,8 +278,6 @@ const editNote = async (req, res) => {
         message: "Note not found or you're not authorized to edit it",
       });
     }
-
-    console.log("Updated note:", updatedNote);
 
     res.status(200).json({
       message: "Note updated successfully",
@@ -420,15 +415,11 @@ const uploadImages = async (req, res) => {
       return res.status(400).json({ message: "No files uploaded" });
     }
 
-    console.log("Uploaded files:", req.files);
-
     const imageUrls = req.files.map((file) => ({
       url: `uploads/${file.filename}`,
       thumbnail: `uploads/thumbnails/thumb-${file.filename}`,
       createdAt: new Date(),
     }));
-
-    console.log("Generated image URLs:", imageUrls);
 
     res.status(200).json({
       message: "Images uploaded successfully",
@@ -446,7 +437,6 @@ const uploadImages = async (req, res) => {
 const deleteImage = async (req, res) => {
   try {
     const { noteId, imageId } = req.params;
-    console.log("Deleting image:", { noteId, imageId });
 
     const note = await Note.findOne({
       _id: noteId,
@@ -471,7 +461,6 @@ const deleteImage = async (req, res) => {
 
       if (fs.existsSync(originalPath)) {
         fs.unlinkSync(originalPath);
-        console.log("Deleted original image:", originalPath);
       }
 
       // Delete thumbnail image
@@ -479,7 +468,6 @@ const deleteImage = async (req, res) => {
 
       if (fs.existsSync(thumbnailPath)) {
         fs.unlinkSync(thumbnailPath);
-        console.log("Deleted thumbnail:", thumbnailPath);
       }
     } catch (error) {
       console.error("File deletion error:", error);
@@ -488,7 +476,6 @@ const deleteImage = async (req, res) => {
     note.images = note.images.filter((img) => img._id.toString() !== imageId);
     await note.save();
 
-    console.log("Image deleted successfully");
     res.status(200).json({
       message: "Image deleted successfully",
       noteId,
