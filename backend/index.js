@@ -7,7 +7,11 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger");
 
 const routes = require("./routes/main");
-const { notFound, globalErrorHandler } = require("./middleware/errorHandler");
+const {
+  notFound,
+  globalErrorHandler,
+  handleImageUploadError,
+} = require("./middleware/errorHandler");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -42,5 +46,6 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Error handlers
 app.use(notFound);
 app.use(globalErrorHandler);
+app.use(handleImageUploadError);
 
 app.listen(PORT, () => console.log(`JK Notes Server is Running on ${PORT}`));

@@ -354,6 +354,68 @@ const deleteAllNotes = async (req, res) => {
   }
 };
 
+// Upload Images
+const uploadImages = async (req, res) => {
+  try {
+    if (!req.processedImages) {
+      return res.status(400).json({ message: "Image processing failed" });
+    }
+
+    res.status(200).json({
+      message: "Images uploaded successfully",
+      images: req.processedImages,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to upload images",
+      error: error.message,
+    });
+  }
+};
+
+const deleteImage = async (req, res) => {
+  try {
+    const { noteId, imageId } = req.params;
+
+    const note = await Note.findOne({
+      _id: noteId,
+      creator: req.user._id,
+    });
+
+    if (!note) {
+      return res.status(404).json({ message: "Note not found" });
+    }
+
+    const image = note.images.id(imageId);
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    // Delete original file and thumbnail
+    const filePaths = [
+      path.join(__dirname, "..", image.url),
+      path.join(__dirname, "..", image.thumbnail),
+    ];
+
+    filePaths.forEach((filePath) => {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    });
+
+    // Remove from note
+    note.images.pull(imageId);
+    await note.save();
+
+    res.status(200).json({ message: "Image deleted successfully" });
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to delete image",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllNotes,
   getNote,
@@ -361,4 +423,6 @@ module.exports = {
   editNote,
   deleteNote,
   deleteAllNotes,
+  uploadImages,
+  deleteImage,
 };
