@@ -130,13 +130,18 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     try {
       const image = images[index];
       if (image._id && noteId) {
+        console.log("Removing image:", { noteId, imageId: image._id });
+
         await api.delete(`/notes/${noteId}/images/${image._id}`);
+        console.log("Image deleted from server");
       }
+
       const newImages = images.filter((_, i) => i !== index);
       setImages(newImages);
       onImagesUploaded(newImages);
     } catch (error) {
-      Alert.alert("Error", "Failed to remove image");
+      console.error("Remove image error:", error);
+      Alert.alert("Error", "Failed to remove image. Please try again.");
     }
   };
 

@@ -1,3 +1,7 @@
+const Note = require("../models/noteSchema");
+const path = require("path");
+const fs = require("fs");
+
 /**
  * @swagger
  * components:
@@ -27,8 +31,6 @@
  *           type: string
  *           format: date-time
  */
-
-const Note = require("../models/noteSchema");
 
 /**
  * @swagger
@@ -240,11 +242,37 @@ const createNote = async (req, res) => {
 const editNote = async (req, res) => {
   try {
     const { _id } = req.params;
-    const { title, content } = req.body;
+    console.log("Edit Note Request:", { id: _id, body: req.body });
+
+    const { title, content, images } = req.body;
+
+    if (!title || !content) {
+      return res.status(400).json({
+        message: "Title and content are required",
+        missingFields: {
+          title: !title,
+          content: !content,
+        },
+      });
+    }
+
+    let validatedImages = [];
+    if (images && Array.isArray(images)) {
+      validatedImages = images.map((image) => ({
+        url: image.url,
+        thumbnail: image.thumbnail,
+        createdAt: new Date(image.createdAt),
+      }));
+    }
 
     const updatedNote = await Note.findOneAndUpdate(
       { _id: _id, creator: req.user._id },
-      { title, content, updatedAt: new Date() },
+      {
+        title,
+        content,
+        images: validatedImages,
+        updatedAt: new Date(),
+      },
       { new: true, runValidators: true }
     );
 
@@ -254,10 +282,17 @@ const editNote = async (req, res) => {
       });
     }
 
-    res.status(200).json({ message: "Note updated successfully", updatedNote });
+    console.log("Updated note:", updatedNote);
+
+    res.status(200).json({
+      message: "Note updated successfully",
+      updatedNote,
+    });
   } catch (error) {
+    console.error("Edit note error:", error);
     res.status(500).json({
       message: "Failed to update note",
+      error: error.message,
     });
   }
 };
@@ -385,15 +420,15 @@ const uploadImages = async (req, res) => {
       return res.status(400).json({ message: "No files uploaded" });
     }
 
-    console.log("Uploaded files:", req.files); // 디버깅용
+    console.log("Uploaded files:", req.files);
 
     const imageUrls = req.files.map((file) => ({
-      url: `uploads/${file.filename}`, // 경로 수정
-      thumbnail: `uploads/thumbnails/thumb-${file.filename}`, // 경로 수정
+      url: `uploads/${file.filename}`,
+      thumbnail: `uploads/thumbnails/thumb-${file.filename}`,
       createdAt: new Date(),
     }));
 
-    console.log("Generated image URLs:", imageUrls); // 디버깅용
+    console.log("Generated image URLs:", imageUrls);
 
     res.status(200).json({
       message: "Images uploaded successfully",
@@ -411,6 +446,7 @@ const uploadImages = async (req, res) => {
 const deleteImage = async (req, res) => {
   try {
     const { noteId, imageId } = req.params;
+    console.log("Deleting image:", { noteId, imageId });
 
     const note = await Note.findOne({
       _id: noteId,
@@ -421,29 +457,45 @@ const deleteImage = async (req, res) => {
       return res.status(404).json({ message: "Note not found" });
     }
 
-    const image = note.images.id(imageId);
-    if (!image) {
+    const imageToDelete = note.images.find(
+      (img) => img._id.toString() === imageId
+    );
+    if (!imageToDelete) {
+      console.log("Image not found:", imageId);
       return res.status(404).json({ message: "Image not found" });
     }
 
-    // Delete original file and thumbnail
-    const filePaths = [
-      path.join(__dirname, "..", image.url),
-      path.join(__dirname, "..", image.thumbnail),
-    ];
+    try {
+      // Delete original image
+      const originalPath = path.join(__dirname, "..", imageToDelete.url);
 
-    filePaths.forEach((filePath) => {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+      if (fs.existsSync(originalPath)) {
+        fs.unlinkSync(originalPath);
+        console.log("Deleted original image:", originalPath);
       }
-    });
 
-    // Remove from note
-    note.images.pull(imageId);
+      // Delete thumbnail image
+      const thumbnailPath = path.join(__dirname, "..", imageToDelete.thumbnail);
+
+      if (fs.existsSync(thumbnailPath)) {
+        fs.unlinkSync(thumbnailPath);
+        console.log("Deleted thumbnail:", thumbnailPath);
+      }
+    } catch (error) {
+      console.error("File deletion error:", error);
+    }
+
+    note.images = note.images.filter((img) => img._id.toString() !== imageId);
     await note.save();
 
-    res.status(200).json({ message: "Image deleted successfully" });
+    console.log("Image deleted successfully");
+    res.status(200).json({
+      message: "Image deleted successfully",
+      noteId,
+      imageId,
+    });
   } catch (error) {
+    console.error("Delete image error:", error);
     res.status(500).json({
       message: "Failed to delete image",
       error: error.message,
