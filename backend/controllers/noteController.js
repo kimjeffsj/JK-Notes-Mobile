@@ -1,4 +1,3 @@
-const Note = require("../models/noteSchema");
 /**
  * @swagger
  * components:
@@ -28,6 +27,8 @@ const Note = require("../models/noteSchema");
  *           type: string
  *           format: date-time
  */
+
+const Note = require("../models/noteSchema");
 
 /**
  * @swagger

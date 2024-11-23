@@ -22,8 +22,6 @@ const {
   deleteAllNotes,
 } = require("../controllers/noteController");
 
-const { uploadImage, deleteImage } = require("../controllers/imageController");
-
 // Auth
 router.post("/login", loginUser);
 router.post("/register", registerUser);
@@ -37,10 +35,6 @@ router.post("/notes/create", isAuth, createNote);
 router.post("/notes/edit/:_id", isAuth, editNote);
 router.delete("/notes/deleteAll", isAuth, deleteAllNotes);
 router.delete("/notes/:_id", isAuth, deleteNote);
-
-// Images
-router.post("/notes/:noteId/images", isAuth, uploadImage);
-router.delete("/notes/:noteId/images/:imageId", isAuth, deleteImage);
 
 // Profile
 router.get("/profile", isAuth, (req, res) => {

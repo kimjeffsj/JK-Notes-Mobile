@@ -5,7 +5,6 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -20,8 +19,6 @@ import { useAppDispatch } from "@/shared/hooks/useRedux";
 import { createNote } from "@/shared/store/slices/noteSlice";
 import { useTheme } from "@/shared/hooks/useTheme";
 import RichTextEditor from "@/components/RichEditor";
-import ImageSection from "@/components/ImageSection";
-import type { NoteImage } from "@/shared/types/note/note";
 
 export default function CreateNote() {
   const { isDark } = useTheme();
@@ -29,7 +26,6 @@ export default function CreateNote() {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [images, setImages] = useState<NoteImage[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
@@ -56,13 +52,10 @@ export default function CreateNote() {
     }
 
     const hasNewChanges =
-      trimmedTitle !== savedTitle ||
-      trimmedContent !== savedContent ||
-      images.length > 0;
-
+      trimmedTitle !== savedTitle || trimmedContent !== savedContent;
     setHasChanges(hasNewChanges);
     return hasNewChanges;
-  }, [title, content, images]);
+  }, [title, content]);
 
   // Formatting Saved time
   const formatLastSaved = useCallback((date: Date) => {
@@ -86,8 +79,7 @@ export default function CreateNote() {
   // Auto-Save function
   const debouncedSave = useCallback(
     debounce(async (currentTitle: string, currentContent: string) => {
-      if (!currentContent.trim() && !currentTitle.trim() && images.length === 0)
-        return;
+      if (!currentContent.trim() && !currentTitle.trim()) return;
 
       try {
         setIsSaving(true);
@@ -150,7 +142,7 @@ export default function CreateNote() {
     const trimmedTitle = title.trim();
     const trimmedContent = content.trim();
 
-    if (!trimmedContent && !trimmedTitle && images.length === 0) {
+    if (!trimmedContent && !trimmedTitle) {
       router.push("/(app)/dashboard");
       return;
     }
@@ -174,7 +166,7 @@ export default function CreateNote() {
     } finally {
       setIsSaving(false);
     }
-  }, [title, content, images, dispatch, debouncedSave]);
+  }, [title, content, dispatch, debouncedSave]);
 
   // Handle back button
   const handleBack = useCallback(() => {
@@ -279,10 +271,7 @@ export default function CreateNote() {
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1 bg-background dark:bg-background-dark"
-      >
+      <KeyboardAvoidingView className="flex-1 bg-background dark:bg-background-dark">
         <Header
           showBack
           title="New Note"
@@ -302,44 +291,34 @@ export default function CreateNote() {
           }
         />
 
-        <ScrollView>
-          <View className="px-4 py-2">
-            <TextInput
-              className="text-xl font-semibold text-primary dark:text-primary-dark py-4"
-              placeholder="Title"
-              value={title}
-              onChangeText={setTitle}
-              placeholderTextColor={isDark ? "#666666" : "#999999"}
-              autoFocus
-            />
-          </View>
+        <View className="px-4 py-2">
+          <TextInput
+            className="text-xl font-semibold text-primary dark:text-primary-dark py-4"
+            placeholder="Title"
+            value={title}
+            onChangeText={setTitle}
+            placeholderTextColor={isDark ? "#666666" : "#999999"}
+            autoFocus
+          />
+        </View>
 
-          {lastSaved && (
-            <View className="flex-row justify-end items-center px-4 mb-2">
-              <Text className="text-text-secondary dark:text-text-dark-secondary text-sm mr-1">
-                {savedNoteId.current ? "Last saved:" : "Draft saved:"}
+        {lastSaved && (
+          <View className="flex-row justify-end items-center px-4 mb-2">
+            <Text className="text-text-secondary dark:text-text-dark-secondary text-sm mr-1">
+              {savedNoteId.current ? "Last saved:" : "Draft saved:"}
+            </Text>
+            <Text className="text-text-secondary dark:text-text-dark-secondary text-sm">
+              {formatLastSaved(lastSaved)}
+            </Text>
+            {hasChanges && (
+              <Text className="text-accent text-sm ml-2">
+                (Unsaved changes)
               </Text>
-              <Text className="text-text-secondary dark:text-text-dark-secondary text-sm">
-                {formatLastSaved(lastSaved)}
-              </Text>
-              {hasChanges && (
-                <Text className="text-accent text-sm ml-2">
-                  (Unsaved changes)
-                </Text>
-              )}
-            </View>
-          )}
-
-          <View className="px-4">
-            <ImageSection
-              noteId={savedNoteId.current || ""}
-              images={images}
-              onImagesChange={setImages}
-            />
+            )}
           </View>
+        )}
 
-          {renderEditor()}
-        </ScrollView>
+        {renderEditor()}
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
