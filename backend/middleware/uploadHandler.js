@@ -1,16 +1,15 @@
+const express = require("express");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const sharp = require("sharp");
 
-// Upload Dir
 const uploadDir = "uploads";
-const thumbnailDir = "uploads/thumbnails";
+const thumbnailDir = path.join(uploadDir, "thumbnails");
 
-// Create upload dir
 [uploadDir, thumbnailDir].forEach((dir) => {
   if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+    fs.mkdirSync(dir, { recursive: true, mode: 0o755 });
   }
 });
 
@@ -41,58 +40,119 @@ const upload = multer({
   },
 });
 
-// Create thumbnail
+// Create Thumbnail
 const generateThumbnail = async (file) => {
-  const thumbnailPath = path.join(
-    thumbnailDir,
-    `thumb-${path.basename(file.filename)}`
-  );
+  try {
+    const thumbnailFilename = `thumb-${path.basename(file.filename)}`;
+    const thumbnailPath = path.join(thumbnailDir, thumbnailFilename);
 
-  await sharp(file.path)
-    .resize(300, 300, {
-      fit: "inside",
-      withoutEnlargement: true,
-    })
-    .jpeg({ quality: 80 })
-    .toFile(thumbnailPath);
+    console.log("Generating thumbnail for:", file.path);
+    console.log("Thumbnail will be saved at:", thumbnailPath);
 
-  return thumbnailPath;
+    // Check exist
+    if (!fs.existsSync(file.path)) {
+      throw new Error(`Original file not found: ${file.path}`);
+    }
+
+    // Check sharp data
+    const metadata = await sharp(file.path).metadata();
+    console.log("Image metadata:", metadata);
+
+    await sharp(file.path)
+      .resize(300, 300, {
+        fit: "cover",
+        position: "centre",
+      })
+      .jpeg({ quality: 80 })
+      .toFile(thumbnailPath);
+
+    // Check Thumbnail
+    if (fs.existsSync(thumbnailPath)) {
+      const stats = fs.statSync(thumbnailPath);
+      console.log("Thumbnail created successfully:", {
+        path: thumbnailPath,
+        size: stats.size,
+        permissions: stats.mode.toString(8),
+      });
+    }
+
+    return path.relative(process.cwd(), thumbnailPath).replace(/\\/g, "/");
+  } catch (error) {
+    console.error("Thumbnail generation error:", error);
+    throw error;
+  }
 };
 
-// Processing image info
+// Processing Images
 const processImages = async (req, res, next) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: "No files uploaded" });
     }
 
+    console.log("Processing images:", req.files);
+
     const processedImages = await Promise.all(
       req.files.map(async (file) => {
-        const thumbnailPath = await generateThumbnail(file);
-        return {
-          url: `${uploadDir}/${file.filename}`,
-          thumbnail: thumbnailPath.replace(/\\/g, "/"),
-          originalName: file.originalname,
-          size: file.size,
-          mimetype: file.mimetype,
-          createdAt: new Date(),
-        };
+        try {
+          const thumbnailPath = await generateThumbnail(file);
+          const relativePath = path
+            .relative(process.cwd(), file.path)
+            .replace(/\\/g, "/");
+
+          console.log("Processed image:", {
+            originalPath: relativePath,
+            thumbnailPath: thumbnailPath,
+          });
+
+          return {
+            url: relativePath,
+            thumbnail: thumbnailPath,
+            createdAt: new Date(),
+          };
+        } catch (error) {
+          console.error(`Error processing file ${file.filename}:`, error);
+          throw error;
+        }
       })
     );
 
     req.processedImages = processedImages;
+    console.log("Final processed images:", processedImages);
+
     next();
   } catch (error) {
-    req.files?.forEach((file) => {
-      fs.unlinkSync(file.path);
-      const thumbPath = path.join(thumbnailDir, `thumb-${file.filename}`);
-      if (fs.existsSync(thumbPath)) {
-        fs.unlinkSync(thumbPath);
-      }
-    });
+    console.error("Image processing error:", error);
+
+    if (req.files) {
+      req.files.forEach((file) => {
+        try {
+          if (fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path);
+            console.log("Cleaned up original file:", file.path);
+          }
+          const thumbPath = path.join(
+            thumbnailDir,
+            `thumb-${path.basename(file.filename)}`
+          );
+          if (fs.existsSync(thumbPath)) {
+            fs.unlinkSync(thumbPath);
+            console.log("Cleaned up thumbnail:", thumbPath);
+          }
+        } catch (e) {
+          console.error("Cleanup error:", e);
+        }
+      });
+    }
 
     next(error);
   }
 };
 
-module.exports = { upload, processImages };
+const serveUploads = express.static(uploadDir);
+
+module.exports = {
+  upload,
+  processImages,
+  serveUploads,
+};

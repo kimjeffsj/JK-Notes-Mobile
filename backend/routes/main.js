@@ -21,6 +21,8 @@ const {
   editNote,
   deleteNote,
   deleteAllNotes,
+  uploadImages,
+  deleteImage,
 } = require("../controllers/noteController");
 
 // Auth

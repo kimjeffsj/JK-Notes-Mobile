@@ -144,23 +144,47 @@ const getNote = async (req, res) => {
  */
 const createNote = async (req, res) => {
   try {
-    const { title, content } = req.body;
+    const { title, content, images } = req.body;
 
     if (!title || !content) {
-      return res.status(400).json({ message: "Please fill in all fields" });
+      return res.status(400).json({
+        message: "Title and content are required",
+        missingFields: {
+          title: !title,
+          content: !content,
+        },
+      });
     }
+
+    // 이미지 데이터 검증
+    let validatedImages = [];
+    if (images && Array.isArray(images)) {
+      validatedImages = images.map((image) => ({
+        url: image.url,
+        thumbnail: image.thumbnail,
+        createdAt: new Date(image.createdAt),
+      }));
+    }
+
     const newNote = await Note.create({
       title,
       content,
+      images: validatedImages,
       creator: req.user._id,
     });
-    res
-      .status(201)
-      .json({ message: "Note successfully created", note: newNote });
+
+    console.log("Created note:", newNote);
+
+    res.status(201).json({
+      message: "Note successfully created",
+      note: newNote,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Failed to create note", error: error.message });
+    console.error("Note creation error:", error);
+    res.status(500).json({
+      message: "Failed to create note",
+      error: error.message,
+    });
   }
 };
 
@@ -357,15 +381,26 @@ const deleteAllNotes = async (req, res) => {
 // Upload Images
 const uploadImages = async (req, res) => {
   try {
-    if (!req.processedImages) {
-      return res.status(400).json({ message: "Image processing failed" });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No files uploaded" });
     }
+
+    console.log("Uploaded files:", req.files); // 디버깅용
+
+    const imageUrls = req.files.map((file) => ({
+      url: `uploads/${file.filename}`, // 경로 수정
+      thumbnail: `uploads/thumbnails/thumb-${file.filename}`, // 경로 수정
+      createdAt: new Date(),
+    }));
+
+    console.log("Generated image URLs:", imageUrls); // 디버깅용
 
     res.status(200).json({
       message: "Images uploaded successfully",
-      images: req.processedImages,
+      images: imageUrls,
     });
   } catch (error) {
+    console.error("Upload error:", error);
     res.status(500).json({
       message: "Failed to upload images",
       error: error.message,
