@@ -8,6 +8,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
   Alert,
+  Image,
   KeyboardAvoidingView,
   ScrollView,
   Text,
@@ -15,6 +16,7 @@ import {
   View,
 } from "react-native";
 import WebView from "react-native-webview";
+import ImageViewer from "@/components/ImageViewer";
 
 // HTML Styling template
 const getHtmlContent = (content: string, isDark: boolean) => `
@@ -74,10 +76,20 @@ export default function NoteDetail() {
   const dispatch = useAppDispatch();
   const { isDark } = useTheme();
 
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [webViewHeight, setWebViewHeight] = useState(0);
+
   // Fetching note
   const note = useAppSelector((state) =>
     state.notes.notes.find((note) => note._id === id)
   );
+
+  // Handle Image click
+  const handleImagePress = (index: number) => {
+    setSelectedImageIndex(index);
+    setImageViewerVisible(true);
+  };
 
   // Formatting date
   const formattedDate = useMemo(() => {
@@ -137,11 +149,36 @@ export default function NoteDetail() {
     router.push(`/notes/edit/${note._id}`);
   }, [note]);
 
-  // WebView height state
-  const [webViewHeight, setWebViewHeight] = useState(0);
-
   const handleWebViewMessage = (event: any) => {
     setWebViewHeight(parseInt(event.nativeEvent.data, 10));
+  };
+
+  const renderImageGallery = () => {
+    if (!note?.images?.length) return null;
+
+    return (
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        className="flex-row p-4"
+      >
+        {note.images.map((image, index) => (
+          <TouchableOpacity
+            key={index}
+            onPress={() => handleImagePress(index)}
+            className="mr-2"
+          >
+            <Image
+              source={{
+                uri: `${process.env.EXPO_PUBLIC_API_URL}/${image.thumbnail}`,
+              }}
+              className="w-24 h-24 rounded-lg"
+              resizeMode="cover"
+            />
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    );
   };
 
   if (!note) {
@@ -180,6 +217,8 @@ export default function NoteDetail() {
           </Text>
         </View>
 
+        {renderImageGallery()}
+
         <View className="py-4">
           <WebView
             source={{ html: getHtmlContent(note.content, isDark) }}
@@ -197,6 +236,13 @@ export default function NoteDetail() {
           />
         </View>
       </ScrollView>
+
+      <ImageViewer
+        images={note.images || []}
+        initialIndex={selectedImageIndex}
+        visible={imageViewerVisible}
+        onClose={() => setImageViewerVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 }
