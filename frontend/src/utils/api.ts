@@ -1,13 +1,12 @@
 import axios from "axios";
 import { storage } from "@/utils/storage";
-import { logout } from "@/shared/store/slices/authSlice";
 
 const api = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL,
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 10000,
+  timeout: 30000,
 });
 
 // Checking token expiration
@@ -20,18 +19,19 @@ export const isTokenExpired = (token: string): boolean => {
   }
 };
 
-api.interceptors.request.use(
-  async (config) => {
-    const token = await storage.getToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+api.interceptors.request.use(async (config) => {
+  const token = await storage.getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-);
+
+  if (config.headers["Content-Type"] === "multipart/form-data") {
+    return config;
+  }
+
+  config.headers["Content-Type"] = "application/json";
+  return config;
+});
 
 api.interceptors.response.use(
   (response) => response,

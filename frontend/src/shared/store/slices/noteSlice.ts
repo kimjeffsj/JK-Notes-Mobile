@@ -1,4 +1,4 @@
-import { Note, NotesState } from "@/shared/types/note/note";
+import { Note, NotesState, UploadedImage } from "@/shared/types/note/note";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import api from "@/utils/api";
 
@@ -25,12 +25,30 @@ export const fetchNotes = createAsyncThunk(
 
 export const createNote = createAsyncThunk(
   "notes/create",
-  async (data: { title: string; content: string }, { rejectWithValue }) => {
+  async (
+    data: {
+      title: string;
+      content: string;
+      images: UploadedImage[];
+    },
+    { rejectWithValue }
+  ) => {
     try {
-      const response = await api.post("/notes/create", data);
+      console.log("Creating note with data:", data); // debug
+      const response = await api.post("/notes/create", {
+        title: data.title,
+        content: data.content,
+        images: data.images.map((img) => ({
+          url: img.url,
+          thumbnail: img.thumbnail,
+          createdAt: img.createdAt || new Date().toISOString(),
+        })),
+      });
 
+      console.log("Create note response:", response.data); // debug
       return response.data.note;
     } catch (error: any) {
+      console.error("Create note error:", error); // debug
       return rejectWithValue(
         error.response?.data?.message || "Failed to create a note"
       );
@@ -55,17 +73,41 @@ export const detailNote = createAsyncThunk(
 export const editNote = createAsyncThunk(
   "notes/edit",
   async (
-    { id, data }: { id: string; data: { title: string; content: string } },
+    {
+      id,
+      data,
+    }: {
+      id: string;
+      data: {
+        title: string;
+        content: string;
+        images: UploadedImage[];
+      };
+    },
     { rejectWithValue }
   ) => {
     try {
-      const response = await api.post(`/notes/edit/${id}`, data);
+      console.log("Editing note:", { id, data });
+
+      const response = await api.post(`/notes/edit/${id}`, {
+        title: data.title,
+        content: data.content,
+        images: data.images.map((img) => ({
+          url: img.url,
+          thumbnail: img.thumbnail,
+          createdAt: img.createdAt || new Date().toISOString(),
+        })),
+      });
+
+      console.log("Edit note response:", response.data);
+
       return {
         _id: id,
         ...data,
         ...response.data.updatedNote,
       };
     } catch (error: any) {
+      console.error("Edit note error:", error);
       return rejectWithValue(
         error.response?.data?.message || "Failed to edit note"
       );
@@ -185,6 +227,7 @@ const noteSlice = createSlice({
           state.notes[noteIndex] = {
             ...state.notes[noteIndex],
             ...action.payload,
+            images: action.payload.images,
           };
           state.notes.sort(
             (a, b) =>

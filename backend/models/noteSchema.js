@@ -16,6 +16,22 @@ const noteSchema = new mongoose.Schema({
   plainContent: {
     type: String,
   },
+  images: [
+    {
+      url: {
+        type: String,
+        required: true,
+      },
+      thumbnail: {
+        type: String,
+        required: true,
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
   creator: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -32,7 +48,6 @@ const noteSchema = new mongoose.Schema({
 
 noteSchema.pre("save", function (next) {
   if (this.isModified("content")) {
-    // Simple HTML to text conversion
     this.plainContent = this.content.replace(/<[^>]*>/g, "");
   }
   next();

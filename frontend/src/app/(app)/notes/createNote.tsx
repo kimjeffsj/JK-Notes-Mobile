@@ -19,6 +19,8 @@ import { useAppDispatch } from "@/shared/hooks/useRedux";
 import { createNote } from "@/shared/store/slices/noteSlice";
 import { useTheme } from "@/shared/hooks/useTheme";
 import RichTextEditor from "@/components/RichEditor";
+import ImageUpload from "@/components/ImageUpload";
+import { UploadedImage } from "@/shared/types/note/note";
 
 export default function CreateNote() {
   const { isDark } = useTheme();
@@ -26,6 +28,7 @@ export default function CreateNote() {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [images, setImages] = useState<UploadedImage[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
@@ -35,6 +38,7 @@ export default function CreateNote() {
   const lastSavedContent = useRef({
     title: "",
     content: "",
+    images: [] as UploadedImage[],
   });
 
   const savedNoteId = useRef<string | null>(null);
@@ -45,17 +49,29 @@ export default function CreateNote() {
     const trimmedContent = content.trim();
     const savedTitle = lastSavedContent.current.title.trim();
     const savedContent = lastSavedContent.current.content.trim();
+    const hasImageChanges =
+      images.length !== lastSavedContent.current.images.length;
 
-    if (!trimmedTitle && !trimmedContent && !savedTitle && !savedContent) {
+    if (
+      !trimmedTitle &&
+      !trimmedContent &&
+      !images.length &&
+      !savedTitle &&
+      !savedContent &&
+      !lastSavedContent.current.images.length
+    ) {
       setHasChanges(false);
       return false;
     }
 
     const hasNewChanges =
-      trimmedTitle !== savedTitle || trimmedContent !== savedContent;
+      trimmedTitle !== savedTitle ||
+      trimmedContent !== savedContent ||
+      hasImageChanges;
+
     setHasChanges(hasNewChanges);
     return hasNewChanges;
-  }, [title, content]);
+  }, [title, content, images]);
 
   // Formatting Saved time
   const formatLastSaved = useCallback((date: Date) => {
@@ -78,72 +94,88 @@ export default function CreateNote() {
 
   // Auto-Save function
   const debouncedSave = useCallback(
-    debounce(async (currentTitle: string, currentContent: string) => {
-      if (!currentContent.trim() && !currentTitle.trim()) return;
-
-      try {
-        setIsSaving(true);
-        let result;
-
-        if (savedNoteId.current) {
-          result = await dispatch(
-            createNote({
-              title: currentTitle || "Untitled Note",
-              content: currentContent,
-            })
-          ).unwrap();
-        } else {
-          result = await dispatch(
-            createNote({
-              title: currentTitle || "Untitled Note",
-              content: currentContent,
-            })
-          ).unwrap();
-
-          if (result?._id) {
-            savedNoteId.current = result._id;
-          }
+    debounce(
+      async (
+        currentTitle: string,
+        currentContent: string,
+        currentImages: UploadedImage[]
+      ) => {
+        if (!currentContent.trim()) {
+          console.log("Skipping auto-save: Content is empty");
+          return;
         }
 
-        lastSavedContent.current = {
-          title: currentTitle || "Untitled Note",
-          content: currentContent,
-        };
+        try {
+          setIsSaving(true);
+          let result;
 
-        const now = new Date();
-        setLastSaved(now);
-        setHasChanges(false);
-      } catch (error) {
-        Alert.alert(
-          "Auto-save Failed",
-          "Changes will be saved when you press Done"
-        );
-      } finally {
-        setIsSaving(false);
-      }
-    }, 3000),
+          if (savedNoteId.current) {
+            result = await dispatch(
+              createNote({
+                title: currentTitle || "Untitled Note",
+                content: currentContent,
+                images: currentImages,
+              })
+            ).unwrap();
+          } else {
+            result = await dispatch(
+              createNote({
+                title: currentTitle || "Untitled Note",
+                content: currentContent,
+                images: currentImages,
+              })
+            ).unwrap();
+
+            if (result?._id) {
+              savedNoteId.current = result._id;
+            }
+          }
+
+          lastSavedContent.current = {
+            title: currentTitle || "Untitled Note",
+            content: currentContent,
+            images: currentImages,
+          };
+
+          const now = new Date();
+          setLastSaved(now);
+          setHasChanges(false);
+        } catch (error) {
+          console.error("Auto-Save failed:", error);
+        } finally {
+          setIsSaving(false);
+        }
+      },
+      3000
+    ),
     [dispatch]
   );
 
   // Checking if content changed
   useEffect(() => {
     checkChanges();
-  }, [title, content, checkChanges]);
+  }, [title, content, images, checkChanges]);
 
   // Auto Saving
   useEffect(() => {
     if (hasChanges) {
-      debouncedSave(title.trim(), content.trim());
+      debouncedSave(title.trim(), content.trim(), images);
     }
   }, [title, content, hasChanges, debouncedSave]);
+
+  // Handle Images uploaded
+  const handleImagesUploaded = (newImages: UploadedImage[]) => {
+    setImages(newImages);
+    setHasChanges(true);
+  };
 
   // Handling done button
   const handleDone = useCallback(async () => {
     const trimmedTitle = title.trim();
     const trimmedContent = content.trim();
 
-    if (!trimmedContent && !trimmedTitle) {
-      router.push("/(app)/dashboard");
+    if (!trimmedContent) {
+      Alert.alert("Error", "Please write some content before saving");
       return;
     }
 
@@ -155,6 +187,7 @@ export default function CreateNote() {
         createNote({
           title: trimmedTitle || "Untitled Note",
           content: trimmedContent,
+          images: images,
         })
       ).unwrap();
 
@@ -166,7 +199,7 @@ export default function CreateNote() {
     } finally {
       setIsSaving(false);
     }
-  }, [title, content, dispatch, debouncedSave]);
+  }, [title, content, images, dispatch, debouncedSave]);
 
   // Handle back button
   const handleBack = useCallback(() => {
@@ -192,7 +225,7 @@ export default function CreateNote() {
               const trimmedTitle = title.trim();
               const trimmedContent = content.trim();
 
-              if (!trimmedContent && !trimmedTitle) {
+              if (!trimmedContent && !trimmedTitle && !images.length) {
                 setIsSaving(false);
                 router.push("/(app)/dashboard");
                 return;
@@ -202,6 +235,7 @@ export default function CreateNote() {
                 createNote({
                   title: trimmedTitle || "Untitled Note",
                   content: trimmedContent,
+                  images: images,
                 })
               ).unwrap();
 
@@ -229,7 +263,7 @@ export default function CreateNote() {
       debouncedSave.cancel();
       router.push("/(app)/dashboard");
     }
-  }, [hasChanges, title, content, dispatch, debouncedSave]);
+  }, [hasChanges, title, content, images, dispatch, debouncedSave]);
 
   // Editor Reset
   useFocusEffect(
@@ -245,8 +279,9 @@ export default function CreateNote() {
   useEffect(() => {
     return () => {
       debouncedSave.cancel();
-      setContent("");
       setTitle("");
+      setContent("");
+      setImages([]);
       setIsSaving(false);
       setHasChanges(false);
     };
@@ -289,6 +324,12 @@ export default function CreateNote() {
               </Text>
             </TouchableOpacity>
           }
+        />
+
+        <ImageUpload
+          onImagesUploaded={handleImagesUploaded}
+          existingImages={images}
+          noteId={savedNoteId.current}
         />
 
         <View className="px-4 py-2">

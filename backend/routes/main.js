@@ -3,6 +3,7 @@ const router = express.Router();
 
 // Middleware
 const { isAuth } = require("../middleware/authHandler");
+const { upload, processImages } = require("../middleware/uploadHandler");
 
 // Controllers
 const {
@@ -20,6 +21,8 @@ const {
   editNote,
   deleteNote,
   deleteAllNotes,
+  uploadImages,
+  deleteImage,
 } = require("../controllers/noteController");
 
 // Auth
@@ -35,6 +38,16 @@ router.post("/notes/create", isAuth, createNote);
 router.post("/notes/edit/:_id", isAuth, editNote);
 router.delete("/notes/deleteAll", isAuth, deleteAllNotes);
 router.delete("/notes/:_id", isAuth, deleteNote);
+
+// Images
+router.post(
+  "/notes/upload-images",
+  isAuth,
+  upload.array("images", 10),
+  processImages,
+  uploadImages
+);
+router.delete("/notes/:noteId/images/:imageId", isAuth, deleteImage);
 
 // Profile
 router.get("/profile", isAuth, (req, res) => {
