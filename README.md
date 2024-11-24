@@ -4,28 +4,43 @@ JK Notes Mobile is based on JK Notes Web, used ejs and node.js to build, that tr
 
 ## Key Features
 
-- User authentication (login/register)
-- Create, edit, and delete notes
-- Real-time auto-save
-- Note search and sorting
-- Dark mode support
+- **Authentication & Security**
+  - JWT-based authentication with refresh tokens
+  - Secure password hashing with bcrypt
+  - Input validation and sanitization
+- **Note Management**
+  - Rich text editing with formatting options
+  - Image upload and gallery support
+  - Real-time auto-save
+  - Smart search functionality
+  - Note sorting and filtering
+  - Bulk operations (delete all)
+- **User Experience**
+
+  - Dark/Light theme support with system preference detection
+  - Swipe gestures for quick actions
+  - Image compression and thumbnail generation
 
 ## Tech Stack
 
 ### Frontend
 
-- React Native / Expo    (evolved from EJS in the web version)
+- React Native / Expo (evolved from EJS in the web version)
 - TypeScript
 - Redux Toolkit
 - NativeWind (Tailwind CSS)
 - React Navigation
+- Rich text editor integration
+- Native image handling
 
 ### Backend
 
-- Node.js / Express.js    (enhanced and optimized from the original web version)
+- Node.js / Express.js (enhanced and optimized from the original web version)
 - MongoDB / Mongoose
 - JWT Authentication
-- Bcrypt
+- Image processing with Sharp
+- Swagger for API documentation
+- Multi-part form handling
 
 ## Folder Structure
 
@@ -36,6 +51,7 @@ JK-Notes-Mobile/
 │   ├── middleware/       # Middleware functions
 │   ├── models/           # Database models
 │   ├── routes/           # API route definitions
+│   ├── uploads/          # Stores images
 │   ├── index.js          # Backend entry point
 │   └── package.json
 └── frontend/
@@ -71,6 +87,7 @@ JK-Notes-Mobile/
 - Node.js 18.0.0 or higher
 - MongoDB (you can download it from [https://www.mongodb.com/try/download/community](https://www.mongodb.com/try/download/community) )
 - Expo CLI
+- iOS Simulator or Android Emulator
 
 ### Installation and Setup
 
@@ -135,6 +152,8 @@ or
 EXPO_PUBLIC_API_URL=http://YOUR_IP_ADDRESS:4000
 ```
 
+For physical devices, use your machine's IP address`
+
 ## API Documentation
 
 API documentation is available via Swagger UI:
@@ -143,4 +162,4 @@ API documentation is available via Swagger UI:
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
