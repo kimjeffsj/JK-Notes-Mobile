@@ -6,6 +6,21 @@ const fs = require("fs");
  * @swagger
  * components:
  *   schemas:
+ *     Image:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: Image ID
+ *         url:
+ *           type: string
+ *           description: Image URL path
+ *         thumbnail:
+ *           type: string
+ *           description: Thumbnail URL path
+ *         createdAt:
+ *           type: string
+ *           format: date-time
  *     Note:
  *       type: object
  *       required:
@@ -21,9 +36,14 @@ const fs = require("fs");
  *         content:
  *           type: string
  *           description: Note content
+ *         images:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Image'
+ *           description: Array of attached images
  *         creator:
  *           type: string
- *           description: Note creator Id
+ *           description: Note creator ID
  *         createdAt:
  *           type: string
  *           format: date-time
@@ -158,7 +178,6 @@ const createNote = async (req, res) => {
       });
     }
 
-    // 이미지 데이터 검증
     let validatedImages = [];
     if (images && Array.isArray(images)) {
       validatedImages = images.map((image) => ({
@@ -408,7 +427,46 @@ const deleteAllNotes = async (req, res) => {
   }
 };
 
-// Upload Images
+/**
+ * /notes/upload-images:
+ *   post:
+ *     summary: Upload images for a note
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Multiple image files
+ *     responses:
+ *       200:
+ *         description: Images uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Images uploaded successfully
+ *                 images:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Image'
+ *       400:
+ *         description: No files uploaded
+ *       500:
+ *         description: Failed to upload images
+ */
 const uploadImages = async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
@@ -434,6 +492,66 @@ const uploadImages = async (req, res) => {
   }
 };
 
+/**
+ * /notes/{noteId}/images/{imageId}:
+ *   delete:
+ *     summary: Delete an image from a note
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: noteId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the note containing the image
+ *       - in: path
+ *         name: imageId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the image to delete
+ *     responses:
+ *       200:
+ *         description: Image deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Image deleted successfully
+ *                 noteId:
+ *                   type: string
+ *                   description: ID of the note
+ *                 imageId:
+ *                   type: string
+ *                   description: ID of the deleted image
+ *       404:
+ *         description: Note or image not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Note not found or Image not found
+ *       500:
+ *         description: Failed to delete image
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Failed to delete image
+ *                 error:
+ *                   type: string
+ */
 const deleteImage = async (req, res) => {
   try {
     const { noteId, imageId } = req.params;
