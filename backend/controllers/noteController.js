@@ -428,6 +428,7 @@ const deleteAllNotes = async (req, res) => {
 };
 
 /**
+ * @swagger
  * /notes/upload-images:
  *   post:
  *     summary: Upload images for a note
@@ -493,6 +494,7 @@ const uploadImages = async (req, res) => {
 };
 
 /**
+ *  @swagger
  * /notes/{noteId}/images/{imageId}:
  *   delete:
  *     summary: Delete an image from a note
